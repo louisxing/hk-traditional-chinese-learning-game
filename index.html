@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>香港小學繁體字學習遊戲</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Arial', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+  .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite; }
+  @keyframes twinkle { 0%,100%{opacity:0.3;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
+
+  #app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 20px; }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 30px; }
+  .header h1 { font-size: 2.4em; color: #fff; text-shadow: 3px 3px 6px rgba(0,0,0,0.4); margin-bottom: 8px; }
+  .header .subtitle { color: #e0d7ff; font-size: 1.1em; }
+
+  /* Score bar */
+  .score-bar {
+    display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px;
+  }
+  .score-item {
+    background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+    border-radius: 20px; padding: 10px 22px; color: white; font-size: 1em; font-weight: bold;
+    border: 2px solid rgba(255,255,255,0.4); display: flex; align-items: center; gap: 8px;
+  }
+  .score-item .icon { font-size: 1.3em; }
+  .score-item span { font-size: 1.2em; }
+
+  /* Nav */
+  .nav { display: flex; gap: 12px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap; }
+  .nav-btn {
+    padding: 12px 28px; border: none; border-radius: 30px; font-size: 1em; font-weight: bold;
+    cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+  .nav-btn.mc { background: linear-gradient(135deg, #f093fb, #f5576c); color: white; }
+  .nav-btn.match { background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; }
+  .nav-btn.browse { background: linear-gradient(135deg, #43e97b, #38f9d7); color: white; }
+  .nav-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+  .nav-btn.active { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
+
+  /* Card */
+  .card {
+    background: rgba(255,255,255,0.95); border-radius: 24px;
+    padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+
+  /* Multiple Choice */
+  .mc-char {
+    text-align: center; font-size: 7em; line-height: 1.1;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; margin-bottom: 10px; cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .mc-char:hover { transform: scale(1.05); }
+  .mc-meta { text-align: center; color: #888; font-size: 0.95em; margin-bottom: 8px; }
+  .mc-question { text-align: center; font-size: 1.15em; color: #555; margin-bottom: 22px; font-weight: bold; }
+  .mc-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .mc-opt {
+    padding: 14px 16px; border: 3px solid #e0e0e0; border-radius: 16px;
+    background: white; cursor: pointer; font-size: 1em; font-weight: bold;
+    transition: all 0.25s; text-align: center; color: #333;
+  }
+  .mc-opt:hover { border-color: #764ba2; background: #f5f0ff; transform: translateY(-2px); }
+  .mc-opt.correct { border-color: #43e97b; background: #e8fff4; color: #1a7a4a; animation: correct-flash 0.5s; }
+  .mc-opt.wrong { border-color: #f5576c; background: #fff0f2; color: #c0392b; animation: shake 0.4s; }
+  @keyframes correct-flash { 0%{transform:scale(1)} 50%{transform:scale(1.05)} 100%{transform:scale(1)} }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+  .mc-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; }
+  .mc-progress { font-size: 0.9em; color: #888; }
+  .progress-bar { background: #eee; border-radius: 10px; height: 8px; width: 200px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 10px; transition: width 0.4s; }
+  .btn-next {
+    padding: 10px 28px; border: none; border-radius: 20px; font-size: 1em; font-weight: bold;
+    background: linear-gradient(135deg, #667eea, #764ba2); color: white; cursor: pointer;
+    box-shadow: 0 4px 15px rgba(102,126,234,0.4); transition: all 0.2s;
+  }
+  .btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.5); }
+  .btn-next:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Mode selector for MC */
+  .mode-select { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+  .mode-btn {
+    padding: 8px 20px; border: 2px solid #ddd; border-radius: 20px;
+    background: white; cursor: pointer; font-size: 0.9em; transition: all 0.2s;
+  }
+  .mode-btn.active { border-color: #764ba2; background: #f5f0ff; color: #764ba2; font-weight: bold; }
+
+  /* Matching Game */
+  .match-header { text-align: center; margin-bottom: 20px; }
+  .match-header h2 { font-size: 1.4em; color: #444; }
+  .match-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .match-tile {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    border-radius: 16px; cursor: pointer; font-weight: bold; transition: all 0.3s;
+    border: 3px solid transparent; padding: 8px; text-align: center;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; font-size: 1.5em; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    user-select: none; position: relative; overflow: hidden;
+  }
+  .match-tile .tile-content { font-size: inherit; }
+  .match-tile.meaning {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    font-size: 0.85em;
+  }
+  .match-tile.pinyin {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    font-size: 0.85em;
+  }
+  .match-tile:hover:not(.matched):not(.disabled) { transform: translateY(-4px) scale(1.03); box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
+  .match-tile.selected { border-color: #ffd700; box-shadow: 0 0 0 3px #ffd700; transform: scale(1.05); }
+  .match-tile.matched { opacity: 0.4; cursor: default; transform: none; filter: grayscale(0.5); }
+  .match-tile.wrong-flash { animation: wrong-shake 0.4s; border-color: #f5576c; }
+  @keyframes wrong-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+  .match-controls { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+  .btn-action {
+    padding: 10px 25px; border: none; border-radius: 20px; font-size: 1em; font-weight: bold;
+    cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .btn-restart { background: linear-gradient(135deg, #f093fb, #f5576c); color: white; }
+  .btn-newgame { background: linear-gradient(135deg, #43e97b, #38f9d7); color: white; }
+  .btn-action:hover { transform: translateY(-2px); }
+  .match-status { text-align: center; font-size: 1.1em; font-weight: bold; margin-bottom: 15px; min-height: 30px; }
+  .match-status.success { color: #1a7a4a; }
+  .match-status.error { color: #c0392b; }
+
+  /* Match type selector */
+  .match-type-sel { display: flex; gap: 10px; justify-content: center; margin-bottom: 18px; }
+
+  /* Browse */
+  .browse-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+  .browse-search {
+    flex: 1; min-width: 180px; padding: 10px 16px; border: 2px solid #ddd;
+    border-radius: 20px; font-size: 1em; outline: none; transition: border-color 0.2s;
+  }
+  .browse-search:focus { border-color: #764ba2; }
+  .grade-filter { display: flex; gap: 6px; flex-wrap: wrap; }
+  .grade-btn {
+    padding: 6px 14px; border: 2px solid #ddd; border-radius: 14px; background: white;
+    cursor: pointer; font-size: 0.85em; transition: all 0.2s;
+  }
+  .grade-btn.active { border-color: #764ba2; background: #764ba2; color: white; }
+  .char-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; max-height: 460px; overflow-y: auto; padding-right: 4px; }
+  .char-grid::-webkit-scrollbar { width: 6px; }
+  .char-grid::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+  .char-tile {
+    background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px;
+    padding: 10px 6px; text-align: center; cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+  }
+  .char-tile:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
+  .char-tile .ct { font-size: 1.8em; color: white; display: block; }
+  .char-tile .cp { font-size: 0.65em; color: rgba(255,255,255,0.85); display: block; margin-top: 2px; }
+
+  /* Char detail modal */
+  .modal-overlay {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.5); z-index: 100; display: flex;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-box {
+    background: white; border-radius: 24px; padding: 35px; max-width: 400px; width: 100%;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.3); text-align: center; animation: modal-in 0.3s;
+  }
+  @keyframes modal-in { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+  .modal-char { font-size: 5em; margin-bottom: 10px; }
+  .modal-pinyin { font-size: 1.3em; color: #764ba2; font-weight: bold; margin-bottom: 8px; }
+  .modal-meaning { font-size: 1em; color: #555; margin-bottom: 6px; line-height: 1.5; }
+  .modal-grade { font-size: 0.85em; color: #888; margin-bottom: 20px; }
+  .modal-example { background: #f5f0ff; border-radius: 12px; padding: 12px; font-size: 0.95em; color: #444; margin-bottom: 20px; line-height: 1.6; }
+  .modal-close {
+    padding: 10px 30px; border: none; border-radius: 20px; font-size: 1em;
+    background: linear-gradient(135deg, #667eea, #764ba2); color: white; cursor: pointer;
+    font-weight: bold;
+  }
+
+  /* Feedback overlay */
+  .feedback-overlay {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 4em; z-index: 200; pointer-events: none; animation: feedback-anim 1s forwards;
+  }
+  @keyframes feedback-anim { 0%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-80%) scale(1.5)} }
+
+  /* Result screen */
+  .result-screen { text-align: center; padding: 20px; }
+  .result-screen h2 { font-size: 2em; margin-bottom: 15px; }
+  .result-stars { font-size: 3em; margin-bottom: 15px; }
+  .result-score { font-size: 1.3em; color: #555; margin-bottom: 25px; }
+  .result-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .mc-char { font-size: 5em; }
+    .mc-options { grid-template-columns: 1fr; }
+    .match-board { grid-template-columns: repeat(3, 1fr); }
+    .header h1 { font-size: 1.8em; }
+  }
+  @media (max-width: 420px) {
+    .match-board { grid-template-columns: repeat(3, 1fr); }
+    .match-tile { font-size: 1.1em; }
+  }
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div id="app">
+  <div class="header">
+    <h1>🌟 繁體字學習遊戲 🌟</h1>
+    <div class="subtitle">參考香港教育局《常用中文字表》小學階段常用字 · 配合香港日常詞語</div>
+  </div>
+  <div class="score-bar">
+    <div class="score-item"><span class="icon">⭐</span> 總分：<span id="totalScore">0</span></div>
+    <div class="score-item"><span class="icon">🔥</span> 連線：<span id="streak">0</span></div>
+    <div class="score-item"><span class="icon">🏆</span> 最高：<span id="bestScore">0</span></div>
+    <div class="score-item"><span class="icon">📚</span> 已學：<span id="learned">0</span></div>
+  </div>
+  <div class="nav">
+    <button class="nav-btn mc active" onclick="showMode('mc')">📝 選擇題</button>
+    <button class="nav-btn match" onclick="showMode('match')">🎯 配對遊戲</button>
+    <button class="nav-btn browse" onclick="showMode('browse')">📖 字詞瀏覽</button>
+  </div>
+  <div class="card" id="mainCard"></div>
+</div>
+<div id="modalOverlay" class="modal-overlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-char" id="modalChar"></div>
+    <div class="modal-pinyin" id="modalPinyin"></div>
+    <div class="modal-meaning" id="modalMeaning"></div>
+    <div class="modal-grade" id="modalGrade"></div>
+    <div class="modal-example" id="modalExample"></div>
+    <button class="modal-close" onclick="closeModal()">關閉</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CHARACTER DATABASE
+// ============================================================
+const CHARS = [
+  // Grade 1 - Basic characters used in Hong Kong primary life
+  {c:'一',p:'jat1',m:'數字一',g:1,ex:'一年班'},
+  {c:'二',p:'ji6',m:'數字二',g:1,ex:'二樓'},
+  {c:'三',p:'saam1',m:'數字三',g:1,ex:'三文治'},
+  {c:'四',p:'sei3',m:'數字四',g:1,ex:'四季'},
+  {c:'五',p:'ng5',m:'數字五',g:1,ex:'五天'},
+  {c:'六',p:'luk6',m:'數字六',g:1,ex:'六月'},
+  {c:'七',p:'cat1',m:'數字七',g:1,ex:'七巧板'},
+  {c:'八',p:'baat3',m:'數字八',g:1,ex:'八達通'},
+  {c:'九',p:'gau2',m:'數字九',g:1,ex:'九龍'},
+  {c:'十',p:'sap6',m:'數字十',g:1,ex:'十分'},
+  {c:'人',p:'jan4',m:'人；人物',g:1,ex:'家人'},
+  {c:'口',p:'hau2',m:'嘴巴；開口',g:1,ex:'開口'},
+  {c:'手',p:'sau2',m:'手掌；雙手',g:1,ex:'洗手'},
+  {c:'足',p:'zuk1',m:'腳；足部',g:1,ex:'足球'},
+  {c:'目',p:'muk6',m:'眼睛；目光',g:1,ex:'目光'},
+  {c:'耳',p:'ji5',m:'耳朵；聽覺',g:1,ex:'耳機'},
+  {c:'水',p:'seoi2',m:'水；液體',g:1,ex:'飲水'},
+  {c:'火',p:'fo2',m:'火；火焰',g:1,ex:'火鍋'},
+  {c:'木',p:'muk6',m:'木；樹木',g:1,ex:'木船'},
+  {c:'日',p:'jat6',m:'太陽；日子',g:1,ex:'生日'},
+  {c:'月',p:'jyut6',m:'月亮；月份',g:1,ex:'月亮'},
+  {c:'天',p:'tin1',m:'天空；天氣',g:1,ex:'天氣'},
+  {c:'雨',p:'jyu5',m:'雨水；下雨',g:1,ex:'雨傘'},
+  {c:'山',p:'saan1',m:'高山；山坡',g:1,ex:'行山'},
+  {c:'石',p:'sek6',m:'石頭；石級',g:1,ex:'石級'},
+  {c:'花',p:'faa1',m:'花朵；花草',g:1,ex:'花園'},
+  {c:'草',p:'cou2',m:'青草；草地',g:1,ex:'草地'},
+  {c:'魚',p:'jyu4',m:'魚類；水中動物',g:1,ex:'魚蛋'},
+  {c:'鳥',p:'niu5',m:'鳥類；小鳥',g:1,ex:'小鳥'},
+  {c:'門',p:'mun4',m:'門口；出入口',g:1,ex:'校門'},
+
+  // Grade 2 - School and family words
+  {c:'家',p:'gaa1',m:'家庭；住所',g:2,ex:'屋企'},
+  {c:'爸',p:'baa4',m:'爸爸；父親',g:2,ex:'爸爸'},
+  {c:'媽',p:'maa1',m:'媽媽；母親',g:2,ex:'媽媽'},
+  {c:'子',p:'zi2',m:'孩子；子女',g:2,ex:'子女'},
+  {c:'女',p:'neoi5',m:'女性；女孩',g:2,ex:'女生'},
+  {c:'學',p:'hok6',m:'學習；上學',g:2,ex:'學校'},
+  {c:'校',p:'haau6',m:'校園；學校',g:2,ex:'校服'},
+  {c:'老',p:'lou5',m:'年長；老師',g:2,ex:'老師'},
+  {c:'師',p:'si1',m:'教師；師長',g:2,ex:'師生'},
+  {c:'生',p:'saang1',m:'學生；生活',g:2,ex:'學生'},
+  {c:'書',p:'syu1',m:'書本；圖書',g:2,ex:'圖書'},
+  {c:'本',p:'bun2',m:'本子；冊本',g:2,ex:'本子'},
+  {c:'字',p:'zi6',m:'文字；生字',g:2,ex:'生字'},
+  {c:'筆',p:'bat1',m:'筆；文具',g:2,ex:'鉛筆'},
+  {c:'課',p:'fo3',m:'課堂；功課',g:2,ex:'上課'},
+  {c:'室',p:'sat1',m:'房間；課室',g:2,ex:'課室'},
+  {c:'讀',p:'duk6',m:'閱讀；讀書',g:2,ex:'朗讀'},
+  {c:'寫',p:'se2',m:'書寫；寫字',g:2,ex:'寫字'},
+  {c:'聽',p:'teng1',m:'聆聽；聽見',g:2,ex:'聽書'},
+  {c:'看',p:'hon3',m:'看見；觀看',g:2,ex:'看圖書'},
+  {c:'行',p:'haang4',m:'步行；行動',g:2,ex:'行路'},
+  {c:'跑',p:'paau2',m:'奔跑；快跑',g:2,ex:'跑步'},
+  {c:'食',p:'sik6',m:'吃；進食',g:2,ex:'食飯'},
+  {c:'飲',p:'jam2',m:'喝；飲用',g:2,ex:'飲品'},
+  {c:'玩',p:'waan2',m:'遊玩；玩耍',g:2,ex:'玩具'},
+  {c:'笑',p:'siu3',m:'微笑；笑容',g:2,ex:'笑聲'},
+  {c:'友',p:'jau5',m:'朋友；友愛',g:2,ex:'好友'},
+  {c:'同',p:'tung4',m:'一起；相同',g:2,ex:'同學'},
+  {c:'早',p:'zou2',m:'早晨；提早',g:2,ex:'早會'},
+  {c:'午',p:'ng5',m:'中午；午間',g:2,ex:'午膳'},
+
+  // Grade 3 - Hong Kong daily surroundings
+  {c:'車',p:'ce1',m:'車輛；交通工具',g:3,ex:'校車'},
+  {c:'巴',p:'baa1',m:'巴士的巴',g:3,ex:'巴士'},
+  {c:'鐵',p:'tit3',m:'金屬；鐵路',g:3,ex:'港鐵'},
+  {c:'站',p:'zaam6',m:'車站；站立',g:3,ex:'車站'},
+  {c:'路',p:'lou6',m:'道路；路線',g:3,ex:'馬路'},
+  {c:'街',p:'gaai1',m:'街道；大街',g:3,ex:'街市'},
+  {c:'市',p:'si5',m:'市場；城市',g:3,ex:'超市'},
+  {c:'場',p:'coeng4',m:'地方；場地',g:3,ex:'操場'},
+  {c:'店',p:'dim3',m:'商店；店舖',g:3,ex:'便利店'},
+  {c:'園',p:'jyun4',m:'花園；公園',g:3,ex:'公園'},
+  {c:'海',p:'hoi2',m:'海洋；大海',g:3,ex:'海洋公園'},
+  {c:'港',p:'gong2',m:'港口；香港',g:3,ex:'香港'},
+  {c:'橋',p:'kiu4',m:'橋樑；天橋',g:3,ex:'天橋'},
+  {c:'樓',p:'lau4',m:'樓層；大樓',g:3,ex:'樓下'},
+  {c:'屋',p:'uk1',m:'房屋；屋苑',g:3,ex:'屋苑'},
+  {c:'房',p:'fong4',m:'房間；房屋',g:3,ex:'房間'},
+  {c:'電',p:'din6',m:'電力；電話',g:3,ex:'電話'},
+  {c:'話',p:'waa6',m:'說話；語言',g:3,ex:'說話'},
+  {c:'機',p:'gei1',m:'機器；手機',g:3,ex:'手機'},
+  {c:'網',p:'mong5',m:'網絡；網站',g:3,ex:'上網'},
+  {c:'遊',p:'jau4',m:'遊玩；出遊',g:3,ex:'遊戲'},
+  {c:'戲',p:'hei3',m:'遊戲；戲院',g:3,ex:'戲院'},
+  {c:'球',p:'kau4',m:'球類；圓球',g:3,ex:'籃球'},
+  {c:'畫',p:'waa2',m:'圖畫；繪畫',g:3,ex:'畫冊'},
+  {c:'歌',p:'go1',m:'歌曲；唱歌',g:3,ex:'唱歌'},
+  {c:'班',p:'baan1',m:'班別；班級',g:3,ex:'班房'},
+  {c:'排',p:'paai4',m:'排隊；排列',g:3,ex:'排隊'},
+  {c:'隊',p:'deoi6',m:'隊伍；小隊',g:3,ex:'隊友'},
+  {c:'館',p:'gun2',m:'館舍；場館',g:3,ex:'圖書館'},
+  {c:'船',p:'syun4',m:'船隻；渡海工具',g:3,ex:'渡輪'},
+
+  // Grade 4 - Food, home and health
+  {c:'茶',p:'caa4',m:'茶；茶飲',g:4,ex:'奶茶'},
+  {c:'飯',p:'faan6',m:'米飯；飯餐',g:4,ex:'午飯'},
+  {c:'麵',p:'min6',m:'麵食；麵條',g:4,ex:'車仔麵'},
+  {c:'包',p:'baau1',m:'麵包；包裹',g:4,ex:'菠蘿包'},
+  {c:'奶',p:'naai5',m:'奶類；牛奶',g:4,ex:'牛奶'},
+  {c:'菜',p:'coi3',m:'蔬菜；菜式',g:4,ex:'青菜'},
+  {c:'果',p:'gwo2',m:'水果；果實',g:4,ex:'水果'},
+  {c:'肉',p:'juk6',m:'肉類；肉食',g:4,ex:'燒肉'},
+  {c:'蛋',p:'daan6',m:'蛋類；雞蛋',g:4,ex:'雞蛋'},
+  {c:'湯',p:'tong1',m:'湯水；熱湯',g:4,ex:'老火湯'},
+  {c:'糖',p:'tong4',m:'糖果；甜味',g:4,ex:'糖水'},
+  {c:'餅',p:'beng2',m:'餅食；糕餅',g:4,ex:'月餅'},
+  {c:'醫',p:'ji1',m:'醫療；看病',g:4,ex:'醫生'},
+  {c:'病',p:'beng6',m:'疾病；生病',g:4,ex:'病假'},
+  {c:'藥',p:'joek6',m:'藥物；藥品',g:4,ex:'藥房'},
+  {c:'健',p:'gin6',m:'健康；強健',g:4,ex:'健康'},
+  {c:'康',p:'hong1',m:'安康；康樂',g:4,ex:'康體日'},
+  {c:'清',p:'cing1',m:'清潔；清楚',g:4,ex:'清水'},
+  {c:'潔',p:'git3',m:'乾淨；整潔',g:4,ex:'整潔'},
+  {c:'洗',p:'sai2',m:'洗滌；洗手',g:4,ex:'洗手液'},
+  {c:'浴',p:'juk6',m:'沐浴；洗澡',g:4,ex:'沐浴露'},
+  {c:'睡',p:'seoi6',m:'睡眠；睡覺',g:4,ex:'睡覺'},
+  {c:'覺',p:'gok3',m:'感覺；知覺',g:4,ex:'感覺'},
+  {c:'客',p:'haak3',m:'客人；來客',g:4,ex:'客廳'},
+  {c:'廳',p:'teng1',m:'大廳；餐廳',g:4,ex:'茶餐廳'},
+  {c:'廚',p:'cyu4',m:'廚房；煮食地方',g:4,ex:'廚房'},
+  {c:'冰',p:'bing1',m:'冰；冰冷',g:4,ex:'冰室'},
+  {c:'服',p:'fuk6',m:'衣服；制服',g:4,ex:'制服'},
+  {c:'裝',p:'zong1',m:'服裝；裝扮',g:4,ex:'便裝日'},
+  {c:'社',p:'se5',m:'社區；團體',g:4,ex:'社區'},
+
+  // Grade 5 - Learning, language and weather
+  {c:'習',p:'zaap6',m:'學習；溫習',g:5,ex:'溫習'},
+  {c:'溫',p:'wan1',m:'溫和；溫習',g:5,ex:'溫書'},
+  {c:'測',p:'cak1',m:'測驗；量度',g:5,ex:'測驗'},
+  {c:'考',p:'haau2',m:'考核；考試',g:5,ex:'考試'},
+  {c:'試',p:'si3',m:'試做；測試',g:5,ex:'口試'},
+  {c:'題',p:'tai4',m:'題目；問題',g:5,ex:'題目'},
+  {c:'答',p:'daap3',m:'回答；作答',g:5,ex:'作答'},
+  {c:'問',p:'man6',m:'發問；詢問',g:5,ex:'發問'},
+  {c:'意',p:'ji3',m:'意思；主意',g:5,ex:'意思'},
+  {c:'思',p:'si1',m:'思考；思想',g:5,ex:'思考'},
+  {c:'想',p:'soeng2',m:'想法；想像',g:5,ex:'理想'},
+  {c:'英',p:'jing1',m:'英語；英文',g:5,ex:'英文'},
+  {c:'文',p:'man4',m:'文字；文章',g:5,ex:'中文'},
+  {c:'數',p:'sou3',m:'數目；數學',g:5,ex:'數學'},
+  {c:'常',p:'soeng4',m:'平常；經常',g:5,ex:'日常'},
+  {c:'識',p:'sik1',m:'知識；認識',g:5,ex:'常識'},
+  {c:'句',p:'geoi3',m:'句子；一句',g:5,ex:'句子'},
+  {c:'段',p:'dyun6',m:'段落；一段',g:5,ex:'段落'},
+  {c:'章',p:'zoeng1',m:'文章；篇章',g:5,ex:'文章'},
+  {c:'星',p:'sing1',m:'星星；星期',g:5,ex:'星期'},
+  {c:'期',p:'kei4',m:'日期；學期',g:5,ex:'學期'},
+  {c:'風',p:'fung1',m:'風；風力',g:5,ex:'颱風'},
+  {c:'晴',p:'cing4',m:'晴朗；晴天',g:5,ex:'晴天'},
+  {c:'陰',p:'jam1',m:'陰暗；陰天',g:5,ex:'陰天'},
+  {c:'雷',p:'leoi4',m:'雷聲；打雷',g:5,ex:'雷雨'},
+  {c:'閃',p:'sim2',m:'閃動；閃電',g:5,ex:'閃電'},
+  {c:'雲',p:'wan4',m:'雲朵；雲層',g:5,ex:'白雲'},
+  {c:'雪',p:'syut3',m:'雪；冰雪',g:5,ex:'雪糕'},
+  {c:'秋',p:'cau1',m:'秋天；秋季',g:5,ex:'中秋'},
+  {c:'節',p:'zit3',m:'節日；節目',g:5,ex:'節日'},
+
+  // Grade 6 - Activities, community and growth
+  {c:'旅',p:'leoi5',m:'旅程；旅行',g:6,ex:'旅行'},
+  {c:'郊',p:'gaau1',m:'郊外；郊遊',g:6,ex:'郊遊'},
+  {c:'野',p:'je5',m:'野外；原野',g:6,ex:'郊野公園'},
+  {c:'露',p:'lou6',m:'露天；露營',g:6,ex:'露營'},
+  {c:'營',p:'jing4',m:'營地；營舍',g:6,ex:'夏令營'},
+  {c:'安',p:'on1',m:'安全；平安',g:6,ex:'平安'},
+  {c:'規',p:'kwai1',m:'規矩；規定',g:6,ex:'校規'},
+  {c:'則',p:'zak1',m:'法則；守則',g:6,ex:'守則'},
+  {c:'助',p:'zo6',m:'幫助；協助',g:6,ex:'互助'},
+  {c:'親',p:'can1',m:'親人；親近',g:6,ex:'親子日'},
+  {c:'鄰',p:'leon4',m:'鄰近；鄰居',g:6,ex:'鄰舍'},
+  {c:'導',p:'dou6',m:'指導；引導',g:6,ex:'輔導課'},
+  {c:'演',p:'jin2',m:'表演；演出',g:6,ex:'表演'},
+  {c:'創',p:'cong3',m:'創作；創新',g:6,ex:'創意'},
+  {c:'競',p:'ging6',m:'競爭；競技',g:6,ex:'競技日'},
+  {c:'賽',p:'coi3',m:'比賽；賽事',g:6,ex:'比賽'},
+  {c:'獎',p:'zoeng2',m:'獎勵；獎品',g:6,ex:'獎牌'},
+  {c:'旗',p:'kei4',m:'旗幟；校旗',g:6,ex:'校旗'},
+  {c:'慶',p:'hing3',m:'慶祝；喜慶',g:6,ex:'校慶'},
+  {c:'祝',p:'zuk1',m:'祝賀；祝願',g:6,ex:'祝賀卡'},
+  {c:'資',p:'zi1',m:'資源；資料',g:6,ex:'資訊'},
+  {c:'訊',p:'seon3',m:'消息；通訊',g:6,ex:'短訊'},
+  {c:'程',p:'cing4',m:'路程；過程',g:6,ex:'路程'},
+  {c:'影',p:'jing2',m:'影像；影子',g:6,ex:'電影'},
+  {c:'片',p:'pin3',m:'卡片；影片',g:6,ex:'卡片'},
+  {c:'聯',p:'lyun4',m:'聯合；聯絡',g:6,ex:'聯課活動'},
+  {c:'絡',p:'lok3',m:'網絡；聯絡',g:6,ex:'聯絡簿'},
+  {c:'報',p:'bou3',m:'報告；海報',g:6,ex:'海報'},
+  {c:'區',p:'keoi1',m:'地區；社區',g:6,ex:'社區中心'},
+  {c:'保',p:'bou2',m:'保護；保持',g:6,ex:'環保'},
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  mode: 'mc',
+  totalScore: 0,
+  streak: 0,
+  bestScore: 0,
+  learnedSet: new Set(),
+  mc: {
+    questionMode: 'pinyin', // pinyin | word
+    currentChar: null,
+    options: [],
+    answered: false,
+    questionIndex: 0,
+    total: 10,
+    correct: 0,
+    usedChars: [],
+    done: false,
+  },
+  match: {
+    matchType: 'word', // word | pinyin
+    tiles: [],
+    selected: null,
+    matched: [],
+    wrong: 0,
+    pairs: 6,
+    done: false,
+  }
+};
+
+// ============================================================
+// UTILS
+// ============================================================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function pick(arr, n) { return shuffle(arr).slice(0, n); }
+function randInt(min, max) { return Math.floor(Math.random()*(max-min+1))+min; }
+function showFeedback(emoji) {
+  const el = document.createElement('div');
+  el.className = 'feedback-overlay';
+  el.textContent = emoji;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1000);
+}
+function updateScoreBar() {
+  document.getElementById('totalScore').textContent = state.totalScore;
+  document.getElementById('streak').textContent = state.streak;
+  document.getElementById('bestScore').textContent = state.bestScore;
+  document.getElementById('learned').textContent = state.learnedSet.size;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showMode(mode) {
+  state.mode = mode;
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.nav-btn.'+mode).classList.add('active');
+  if (mode === 'mc') renderMC();
+  else if (mode === 'match') renderMatch();
+  else renderBrowse();
+}
+
+// ============================================================
+// MULTIPLE CHOICE
+// ============================================================
+function startMCGame() {
+  const mc = state.mc;
+  mc.questionIndex = 0;
+  mc.correct = 0;
+  mc.usedChars = [];
+  mc.done = false;
+  mc.answered = false;
+  nextMCQuestion();
+}
+
+function nextMCQuestion() {
+  const mc = state.mc;
+  if (mc.questionIndex >= mc.total) {
+    mc.done = true;
+    renderMC();
+    return;
+  }
+  // pick a char not recently used
+  const pool = CHARS.filter(c => !mc.usedChars.includes(c.c));
+  mc.currentChar = pool[randInt(0, pool.length-1)];
+  mc.usedChars.push(mc.currentChar.c);
+  if (mc.usedChars.length > 20) mc.usedChars.shift();
+
+  // Generate options
+  const correct = mc.currentChar;
+  let wrongPool = CHARS.filter(c => c.c !== correct.c);
+  if (mc.questionMode === 'pinyin') {
+    wrongPool = wrongPool.filter(c => c.p !== correct.p);
+  } else {
+    wrongPool = wrongPool.filter(c => c.ex !== correct.ex);
+  }
+  const wrongs = pick(wrongPool, 3);
+  mc.options = shuffle([correct, ...wrongs]);
+  mc.answered = false;
+  renderMC();
+}
+
+function renderMC() {
+  const card = document.getElementById('mainCard');
+  const mc = state.mc;
+
+  if (mc.done) {
+    const pct = Math.round(mc.correct/mc.total*100);
+    const stars = pct >= 90 ? '⭐⭐⭐' : pct >= 70 ? '⭐⭐' : '⭐';
+    card.innerHTML = `
+      <div class="result-screen">
+        <div class="result-stars">${stars}</div>
+        <h2 style="color:#764ba2">遊戲完成！</h2>
+        <div class="result-score">答對 ${mc.correct} / ${mc.total} 題（${pct}%）</div>
+        <div class="result-btns">
+          <button class="btn-action btn-newgame" onclick="startMCGame()">再玩一次</button>
+          <button class="btn-action btn-restart" onclick="showMode('match')">試配對遊戲</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const char = mc.currentChar;
+  if (!char) { startMCGame(); return; }
+
+  const qText = mc.questionMode === 'pinyin' ? '選出正確的粵拼讀音：' : '選出相關的常用詞語：';
+  const pct = (mc.questionIndex/mc.total*100).toFixed(0);
+
+  card.innerHTML = `
+    <div class="mode-select">
+      <button class="mode-btn ${mc.questionMode==='pinyin'?'active':''}" onclick="setMCMode('pinyin')">粵拼讀音</button>
+      <button class="mode-btn ${mc.questionMode==='word'?'active':''}" onclick="setMCMode('word')">常用詞語</button>
+    </div>
+    <div class="mc-char" onclick="openModal('${char.c}')" title="點擊查看詳情">${char.c}</div>
+    <div class="mc-meta">第${mc.questionIndex+1}題 / 共${mc.total}題 · 年級：小${char.g}</div>
+    <div class="mc-question">${qText}</div>
+    <div class="mc-options" id="mcOptions">
+      ${mc.options.map((opt,i)=>`
+        <button class="mc-opt" id="opt${i}" onclick="checkMCAnswer(${i})">
+          ${mc.questionMode==='pinyin' ? opt.p : opt.ex}
+        </button>
+      `).join('')}
+    </div>
+    <div class="mc-controls">
+      <div>
+        <div class="mc-progress">進度 ${mc.questionIndex}/${mc.total}</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      <button class="btn-next" id="btnNext" onclick="nextMCQuestion()" disabled>下一題 →</button>
+    </div>`;
+}
+
+function setMCMode(mode) {
+  state.mc.questionMode = mode;
+  startMCGame();
+}
+
+function checkMCAnswer(idx) {
+  const mc = state.mc;
+  if (mc.answered) return;
+  mc.answered = true;
+
+  const selected = mc.options[idx];
+  const correct = mc.currentChar;
+  const isCorrect = mc.questionMode === 'pinyin'
+    ? selected.p === correct.p
+    : selected.ex === correct.ex;
+
+  const opts = document.querySelectorAll('.mc-opt');
+  const correctIdx = mc.options.findIndex(o => mc.questionMode==='pinyin' ? o.p===correct.p : o.ex===correct.ex);
+
+  if (isCorrect) {
+    opts[idx].classList.add('correct');
+    mc.correct++;
+    state.streak++;
+    const bonus = state.streak >= 5 ? 20 : state.streak >= 3 ? 15 : 10;
+    state.totalScore += bonus;
+    if (state.totalScore > state.bestScore) state.bestScore = state.totalScore;
+    state.learnedSet.add(correct.c);
+    showFeedback(state.streak >= 5 ? '🔥' : '✅');
+  } else {
+    opts[idx].classList.add('wrong');
+    opts[correctIdx].classList.add('correct');
+    state.streak = 0;
+    showFeedback('❌');
+  }
+
+  mc.questionIndex++;
+  document.getElementById('btnNext').disabled = false;
+  updateScoreBar();
+}
+
+// ============================================================
+// MATCHING GAME
+// ============================================================
+function startMatchGame() {
+  const mt = state.match;
+  const chars = pick(CHARS, mt.pairs);
+
+  let tiles = [];
+  chars.forEach((ch, i) => {
+    // Character tile
+    tiles.push({ id: 'c'+i, pairId: i, type: 'char', content: ch.c, char: ch });
+    // Match tile (meaning or pinyin)
+    const content = mt.matchType === 'word' ? ch.ex : ch.p;
+    tiles.push({ id: 'm'+i, pairId: i, type: mt.matchType, content, char: ch });
+  });
+
+  mt.tiles = shuffle(tiles);
+  mt.selected = null;
+  mt.matched = [];
+  mt.wrong = 0;
+  mt.done = false;
+  renderMatch();
+}
+
+function renderMatch() {
+  const card = document.getElementById('mainCard');
+  const mt = state.match;
+
+  if (mt.done) {
+    const score = Math.max(0, mt.pairs * 15 - mt.wrong * 3);
+    state.totalScore += score;
+    if (state.totalScore > state.bestScore) state.bestScore = state.totalScore;
+    mt.tiles.forEach(t => state.learnedSet.add(t.char.c));
+    updateScoreBar();
+    card.innerHTML = `
+      <div class="result-screen">
+        <div class="result-stars">🎉🎊🎉</div>
+        <h2 style="color:#764ba2">配對完成！</h2>
+        <div class="result-score">錯誤：${mt.wrong} 次 · 獲得 +${score} 分</div>
+        <div class="result-btns">
+          <button class="btn-action btn-newgame" onclick="startMatchGame()">再玩一次</button>
+          <button class="btn-action btn-restart" onclick="showMode('mc')">試選擇題</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const cols = mt.pairs <= 4 ? 4 : mt.pairs <= 6 ? 4 : 6;
+
+  card.innerHTML = `
+    <div class="match-header"><h2>🎯 配對遊戲 — 找出對應的字詞</h2></div>
+    <div class="match-type-sel">
+      <button class="mode-btn ${mt.matchType==='word'?'active':''}" onclick="setMatchType('word')">配常用詞語</button>
+      <button class="mode-btn ${mt.matchType==='pinyin'?'active':''}" onclick="setMatchType('pinyin')">配粵拼</button>
+      <button class="mode-btn ${mt.pairs===4?'active':''}" onclick="setMatchPairs(4)">4對</button>
+      <button class="mode-btn ${mt.pairs===6?'active':''}" onclick="setMatchPairs(6)">6對</button>
+      <button class="mode-btn ${mt.pairs===8?'active':''}" onclick="setMatchPairs(8)">8對</button>
+    </div>
+    <div class="match-status" id="matchStatus">點擊繁體字，再點擊對應的${mt.matchType==='word'?'常用詞語':'粵拼'}！</div>
+    <div class="match-board" id="matchBoard" style="grid-template-columns:repeat(${Math.min(cols,mt.pairs)},1fr)">
+      ${mt.tiles.map(t => {
+        const isMatched = mt.matched.includes(t.pairId);
+        const isSelected = mt.selected === t.id;
+        const typeClass = t.type === 'char' ? '' : (t.type === 'pinyin' ? 'pinyin' : 'meaning');
+        return `<div class="match-tile ${typeClass} ${isMatched?'matched':''} ${isSelected?'selected':''}"
+          id="tile_${t.id}" onclick="selectMatchTile('${t.id}')">
+          <span class="tile-content">${t.content}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="match-controls">
+      <button class="btn-action btn-restart" onclick="startMatchGame()">重新開始</button>
+      <button class="btn-action btn-newgame" onclick="showMode('browse')">字詞瀏覽</button>
+    </div>`;
+}
+
+function setMatchType(type) {
+  state.match.matchType = type;
+  startMatchGame();
+}
+function setMatchPairs(n) {
+  state.match.pairs = n;
+  startMatchGame();
+}
+
+function selectMatchTile(id) {
+  const mt = state.match;
+  const tile = mt.tiles.find(t => t.id === id);
+  if (!tile || mt.matched.includes(tile.pairId)) return;
+
+  if (!mt.selected) {
+    mt.selected = id;
+    document.getElementById('tile_'+id).classList.add('selected');
+    return;
+  }
+
+  if (mt.selected === id) {
+    mt.selected = null;
+    document.getElementById('tile_'+id).classList.remove('selected');
+    return;
+  }
+
+  const prev = mt.tiles.find(t => t.id === mt.selected);
+
+  if (prev.pairId === tile.pairId && prev.type !== tile.type) {
+    // Match!
+    mt.matched.push(tile.pairId);
+    mt.selected = null;
+    state.learnedSet.add(tile.char.c);
+    const pts = 15;
+    state.totalScore += pts;
+    state.streak++;
+    if (state.totalScore > state.bestScore) state.bestScore = state.totalScore;
+    updateScoreBar();
+    showFeedback('🎉');
+
+    document.getElementById('tile_'+id).classList.add('matched');
+    document.getElementById('tile_'+prev.id).classList.remove('selected');
+    document.getElementById('tile_'+prev.id).classList.add('matched');
+
+    const status = document.getElementById('matchStatus');
+    status.className = 'match-status success';
+    status.textContent = `正確！「${tile.char.c}」= ${mt.matchType==='word'?tile.char.ex:tile.char.p} ✓`;
+
+    if (mt.matched.length === mt.pairs) {
+      setTimeout(()=>{ mt.done = true; renderMatch(); }, 800);
+    }
+  } else {
+    // Wrong
+    mt.wrong++;
+    state.streak = 0;
+    updateScoreBar();
+    showFeedback('❌');
+
+    const status = document.getElementById('matchStatus');
+    status.className = 'match-status error';
+    status.textContent = '不對！再試試吧 🤔';
+
+    const prevEl = document.getElementById('tile_'+prev.id);
+    const curEl = document.getElementById('tile_'+id);
+    prevEl.classList.remove('selected');
+    prevEl.classList.add('wrong-flash');
+    curEl.classList.add('wrong-flash');
+    setTimeout(()=>{
+      prevEl.classList.remove('wrong-flash');
+      curEl.classList.remove('wrong-flash');
+    }, 500);
+    mt.selected = null;
+  }
+}
+
+// ============================================================
+// BROWSE
+// ============================================================
+let browseFilter = { grade: 0, search: '' };
+
+function renderBrowse() {
+  const card = document.getElementById('mainCard');
+  card.innerHTML = `
+    <div class="browse-controls">
+      <input class="browse-search" placeholder="搜尋字、詞語或粵拼..."
+        oninput="browseFilter.search=this.value;updateBrowseGrid()"
+        value="${browseFilter.search}">
+      <div class="grade-filter">
+        <button class="grade-btn ${browseFilter.grade===0?'active':''}" onclick="setBrowseGrade(0)">全部</button>
+        ${[1,2,3,4,5,6].map(g=>`<button class="grade-btn ${browseFilter.grade===g?'active':''}" onclick="setBrowseGrade(${g})">小${g}</button>`).join('')}
+      </div>
+    </div>
+    <div class="char-grid" id="charGrid"></div>`;
+  updateBrowseGrid();
+}
+
+function setBrowseGrade(g) {
+  browseFilter.grade = g;
+  document.querySelectorAll('.grade-btn').forEach((b,i)=>{
+    b.classList.toggle('active', (i===0&&g===0)||(i===g&&g>0));
+  });
+  updateBrowseGrid();
+}
+
+function updateBrowseGrid() {
+  let filtered = CHARS;
+  if (browseFilter.grade > 0) filtered = filtered.filter(c=>c.g===browseFilter.grade);
+  if (browseFilter.search) {
+    const q = browseFilter.search.toLowerCase();
+    filtered = filtered.filter(c=>c.c.includes(q)||c.p.includes(q)||c.m.includes(q)||c.ex.includes(q));
+  }
+  const grid = document.getElementById('charGrid');
+  if (!grid) return;
+  grid.innerHTML = filtered.map(ch=>`
+    <div class="char-tile" onclick="openModal('${ch.c}')">
+      <span class="ct">${ch.c}</span>
+      <span class="cp">${ch.p}</span>
+    </div>`).join('');
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(char) {
+  const ch = CHARS.find(c=>c.c===char);
+  if (!ch) return;
+  document.getElementById('modalChar').textContent = ch.c;
+  document.getElementById('modalPinyin').textContent = '粵拼：' + ch.p;
+  document.getElementById('modalMeaning').textContent = '字義：' + ch.m;
+  document.getElementById('modalGrade').textContent = '年級：小學' + ch.g + '年級';
+  document.getElementById('modalExample').innerHTML = '<strong>常用詞語：</strong>' + ch.ex;
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').style.display = 'none';
+  }
+}
+
+// ============================================================
+// STARS BACKGROUND
+// ============================================================
+function createStars() {
+  const container = document.getElementById('stars');
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random()*3+1;
+    s.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      animation-delay:${Math.random()*3}s;
+      animation-duration:${2+Math.random()*3}s`;
+    container.appendChild(s);
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+createStars();
+showMode('mc');
+startMCGame();
+</script>
+</body>
+</html>
