@@ -94,7 +94,8 @@
   /* Matching Game */
   .match-header { text-align: center; margin-bottom: 20px; }
   .match-header h2 { font-size: 1.4em; color: #444; }
-  .match-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .match-subtitle { color: #666; font-size: 0.98em; margin-top: 8px; }
+  .match-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
   .match-tile {
     aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
     border-radius: 16px; cursor: pointer; font-weight: bold; transition: all 0.3s;
@@ -134,9 +135,6 @@
   .match-status { text-align: center; font-size: 1.1em; font-weight: bold; margin-bottom: 15px; min-height: 30px; }
   .match-status.success { color: #1a7a4a; }
   .match-status.error { color: #c0392b; }
-
-  /* Match type selector */
-  .match-type-sel { display: flex; gap: 10px; justify-content: center; margin-bottom: 18px; }
 
   /* Browse */
   .browse-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
@@ -203,7 +201,7 @@
   @media (max-width: 600px) {
     .mc-char { font-size: 5em; }
     .mc-options { grid-template-columns: 1fr; }
-    .match-board { grid-template-columns: repeat(3, 1fr); }
+    .match-board { grid-template-columns: repeat(4, 1fr); }
     .header h1 { font-size: 1.8em; }
   }
   @media (max-width: 420px) {
@@ -446,6 +444,8 @@ const CHARS = [
 // ============================================================
 // STATE
 // ============================================================
+const MATCH_PAIRS = 10;
+
 let state = {
   mode: 'mc',
   totalScore: 0,
@@ -466,12 +466,10 @@ let state = {
     autoNextTimer: null,
   },
   match: {
-    matchType: 'word',
     tiles: [],
     selected: null,
     matched: [],
     wrong: 0,
-    pairs: 6,
     done: false,
   }
 };
@@ -643,7 +641,7 @@ function checkMCAnswer(idx) {
 // ============================================================
 function startMatchGame() {
   const mt = state.match;
-  const chars = pick(CHARS, mt.pairs);
+  const chars = pick(CHARS, MATCH_PAIRS);
 
   let tiles = [];
   chars.forEach((ch, i) => {
@@ -663,8 +661,13 @@ function renderMatch() {
   const card = document.getElementById('mainCard');
   const mt = state.match;
 
+  if (!mt.tiles.length) {
+    startMatchGame();
+    return;
+  }
+
   if (mt.done) {
-    const score = Math.max(0, mt.pairs * 15 - mt.wrong * 3);
+    const score = Math.max(0, MATCH_PAIRS * 15 - mt.wrong * 3);
     state.totalScore += score;
     if (state.totalScore > state.bestScore) state.bestScore = state.totalScore;
     mt.tiles.forEach(t => state.learnedSet.add(t.char.c));
@@ -682,18 +685,13 @@ function renderMatch() {
     return;
   }
 
-  const cols = mt.pairs <= 4 ? 4 : mt.pairs <= 6 ? 4 : 6;
-
   card.innerHTML = `
-    <div class="match-header"><h2>🎯 配對遊戲 — 找出對應的字詞</h2></div>
-    <div class="match-type-sel">
-      <button class="mode-btn active" type="button">繁體字配常用詞語</button>
-      <button class="mode-btn ${mt.pairs===4?'active':''}" onclick="setMatchPairs(4)">4對</button>
-      <button class="mode-btn ${mt.pairs===6?'active':''}" onclick="setMatchPairs(6)">6對</button>
-      <button class="mode-btn ${mt.pairs===8?'active':''}" onclick="setMatchPairs(8)">8對</button>
+    <div class="match-header">
+      <h2>🎯 配對遊戲 — 找出對應的字詞</h2>
+      <div class="match-subtitle">固定 10 對（20 張卡片），配對繁體字與常用詞語。</div>
     </div>
     <div class="match-status" id="matchStatus">點擊繁體字，再點擊對應的常用詞語！</div>
-    <div class="match-board" id="matchBoard" style="grid-template-columns:repeat(${Math.min(cols,mt.pairs)},1fr)">
+    <div class="match-board" id="matchBoard">
       ${mt.tiles.map(t => {
         const isMatched = mt.matched.includes(t.pairId);
         const isSelected = mt.selected === t.id;
@@ -710,10 +708,6 @@ function renderMatch() {
       <button class="btn-action btn-restart" onclick="startMatchGame()">重新開始</button>
       <button class="btn-action btn-newgame" onclick="showMode('browse')">字詞瀏覽</button>
     </div>`;
-}
-function setMatchPairs(n) {
-  state.match.pairs = n;
-  startMatchGame();
 }
 
 function selectMatchTile(id) {
@@ -755,7 +749,7 @@ function selectMatchTile(id) {
     status.className = 'match-status success';
     status.textContent = `正確！「${tile.char.c}」= ${tile.char.ex} ✓`;
 
-    if (mt.matched.length === mt.pairs) {
+    if (mt.matched.length === MATCH_PAIRS) {
       setTimeout(()=>{ mt.done = true; renderMatch(); }, 800);
     }
   } else {
