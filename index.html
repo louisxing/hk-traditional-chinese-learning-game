@@ -34,6 +34,25 @@
   }
   .score-item .icon { font-size: 1.3em; }
   .score-item span { font-size: 1.2em; }
+  .daily-panel {
+    margin: 0 auto 25px; max-width: 760px;
+    background: rgba(255,255,255,0.18); backdrop-filter: blur(10px);
+    border: 2px solid rgba(255,255,255,0.35); border-radius: 24px;
+    padding: 16px 20px; color: white;
+  }
+  .daily-panel-title {
+    font-size: 1.05em; font-weight: bold; text-align: center; margin-bottom: 12px;
+  }
+  .daily-panel-grid {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+  }
+  .daily-stat {
+    background: rgba(255,255,255,0.14); border-radius: 18px; padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .daily-stat-label { font-size: 0.95em; color: rgba(255,255,255,0.88); }
+  .daily-stat-value { font-size: 1.35em; font-weight: bold; }
 
   /* Nav */
   .nav { display: flex; gap: 12px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap; }
@@ -203,6 +222,7 @@
     .mc-options { grid-template-columns: 1fr; }
     .match-board { grid-template-columns: repeat(4, 1fr); }
     .header h1 { font-size: 1.8em; }
+    .daily-panel-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 420px) {
     .match-board { grid-template-columns: repeat(3, 1fr); }
@@ -222,8 +242,22 @@
   <div class="score-bar">
     <div class="score-item"><span class="icon">⭐</span> 總分：<span id="totalScore">0</span></div>
     <div class="score-item"><span class="icon">🔥</span> 連線：<span id="streak">0</span></div>
-    <div class="score-item"><span class="icon">🏆</span> 最高：<span id="bestScore">0</span></div>
+    <div class="score-item"><span class="icon">🏆</span> 歷史最高：<span id="bestScore">0</span></div>
+    <div class="score-item"><span class="icon">📅</span> 今日得分：<span id="todayScore">0</span></div>
     <div class="score-item"><span class="icon">📚</span> 已學：<span id="learned">0</span></div>
+  </div>
+  <div class="daily-panel">
+    <div class="daily-panel-title">今日戰績</div>
+    <div class="daily-panel-grid">
+      <div class="daily-stat">
+        <span class="daily-stat-label">今日答題次數</span>
+        <span class="daily-stat-value" id="todayAnswers">0</span>
+      </div>
+      <div class="daily-stat">
+        <span class="daily-stat-label">今日正確率</span>
+        <span class="daily-stat-value" id="todayAccuracy">0%</span>
+      </div>
+    </div>
   </div>
   <div class="nav">
     <button class="nav-btn mc active" onclick="showMode('mc')">📝 選擇題</button>
@@ -451,6 +485,12 @@ let state = {
   totalScore: 0,
   streak: 0,
   bestScore: 0,
+  today: {
+    date: '',
+    score: 0,
+    answers: 0,
+    correct: 0,
+  },
   learnedSet: new Set(),
   mc: {
     questionMode: 'meaning',
@@ -471,12 +511,18 @@ let state = {
     matched: [],
     wrong: 0,
     done: false,
+    bonusAwarded: false,
   }
 };
 
 // ============================================================
 // UTILS
 // ============================================================
+const STORAGE_KEYS = {
+  bestScore: 'hkTraditionalGame.bestScore',
+  todayStats: 'hkTraditionalGame.todayStats',
+};
+
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length-1; i > 0; i--) {
@@ -486,6 +532,72 @@ function shuffle(arr) {
   return a;
 }
 function pick(arr, n) { return shuffle(arr).slice(0, n); }
+function getTodayKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+function getAccuracyText() {
+  const { answers, correct } = state.today;
+  if (!answers) return '0%';
+  return `${Math.round(correct / answers * 100)}%`;
+}
+function ensureTodayStatsCurrent() {
+  const todayKey = getTodayKey();
+  if (state.today.date !== todayKey) {
+    state.today = {
+      date: todayKey,
+      score: 0,
+      answers: 0,
+      correct: 0,
+    };
+    savePersistentProgress();
+  }
+}
+function loadPersistentProgress() {
+  const todayKey = getTodayKey();
+  state.today.date = todayKey;
+
+  try {
+    const savedBest = Number(localStorage.getItem(STORAGE_KEYS.bestScore));
+    if (Number.isFinite(savedBest) && savedBest > 0) state.bestScore = savedBest;
+
+    const rawToday = localStorage.getItem(STORAGE_KEYS.todayStats);
+    if (!rawToday) return;
+
+    const parsed = JSON.parse(rawToday);
+    if (parsed && parsed.date === todayKey) {
+      state.today.score = Number.isFinite(parsed.score) ? parsed.score : 0;
+      state.today.answers = Number.isFinite(parsed.answers) ? parsed.answers : 0;
+      state.today.correct = Number.isFinite(parsed.correct) ? parsed.correct : 0;
+    }
+  } catch (err) {
+    console.warn('localStorage unavailable, progress will not persist.', err);
+  }
+}
+function savePersistentProgress() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.bestScore, String(state.bestScore));
+    localStorage.setItem(STORAGE_KEYS.todayStats, JSON.stringify(state.today));
+  } catch (err) {
+    console.warn('Unable to save progress to localStorage.', err);
+  }
+}
+function applyScoreChange(delta) {
+  ensureTodayStatsCurrent();
+  state.totalScore += delta;
+  state.today.score += delta;
+  if (state.totalScore > state.bestScore) state.bestScore = state.totalScore;
+  savePersistentProgress();
+}
+function recordTodayAnswer(isCorrect) {
+  ensureTodayStatsCurrent();
+  state.today.answers++;
+  if (isCorrect) state.today.correct++;
+  savePersistentProgress();
+}
 function showFeedback(emoji) {
   const el = document.createElement('div');
   el.className = 'feedback-overlay';
@@ -494,10 +606,14 @@ function showFeedback(emoji) {
   setTimeout(()=>el.remove(), 1000);
 }
 function updateScoreBar() {
+  ensureTodayStatsCurrent();
   document.getElementById('totalScore').textContent = state.totalScore;
   document.getElementById('streak').textContent = state.streak;
   document.getElementById('bestScore').textContent = state.bestScore;
+  document.getElementById('todayScore').textContent = state.today.score;
   document.getElementById('learned').textContent = state.learnedSet.size;
+  document.getElementById('todayAnswers').textContent = state.today.answers;
+  document.getElementById('todayAccuracy').textContent = getAccuracyText();
 }
 function clearMCAutoNext() {
   if (state.mc.autoNextTimer) {
@@ -609,10 +725,10 @@ function checkMCAnswer(idx) {
   if (isCorrect) {
     opts[idx].classList.add('correct');
     mc.correct++;
+    recordTodayAnswer(true);
     state.streak++;
     const bonus = state.streak >= 5 ? 20 : state.streak >= 3 ? 15 : 10;
-    state.totalScore += bonus;
-    if (state.totalScore > state.bestScore) state.bestScore = state.totalScore;
+    applyScoreChange(bonus);
     state.learnedSet.add(correct.c);
     showFeedback(state.streak >= 5 ? '🔥' : '✅');
     if (status) status.textContent = `答對！+${bonus} 分，正在準備下一題...`;
@@ -620,9 +736,10 @@ function checkMCAnswer(idx) {
     opts[idx].classList.add('wrong');
     opts[correctIdx].classList.add('correct');
     mc.wrong++;
+    recordTodayAnswer(false);
     const penalty = 5;
     const deducted = Math.min(penalty, state.totalScore);
-    state.totalScore -= deducted;
+    applyScoreChange(-deducted);
     state.streak = 0;
     showFeedback('❌');
     if (status) status.textContent = `答錯了，扣 ${deducted} 分。正確答案是「${correct.m}」，正在準備下一題...`;
@@ -654,6 +771,7 @@ function startMatchGame() {
   mt.matched = [];
   mt.wrong = 0;
   mt.done = false;
+  mt.bonusAwarded = false;
   renderMatch();
 }
 
@@ -668,8 +786,10 @@ function renderMatch() {
 
   if (mt.done) {
     const score = Math.max(0, MATCH_PAIRS * 15 - mt.wrong * 3);
-    state.totalScore += score;
-    if (state.totalScore > state.bestScore) state.bestScore = state.totalScore;
+    if (!mt.bonusAwarded) {
+      applyScoreChange(score);
+      mt.bonusAwarded = true;
+    }
     mt.tiles.forEach(t => state.learnedSet.add(t.char.c));
     updateScoreBar();
     card.innerHTML = `
@@ -733,11 +853,11 @@ function selectMatchTile(id) {
     // Match!
     mt.matched.push(tile.pairId);
     mt.selected = null;
+    recordTodayAnswer(true);
     state.learnedSet.add(tile.char.c);
     const pts = 15;
-    state.totalScore += pts;
+    applyScoreChange(pts);
     state.streak++;
-    if (state.totalScore > state.bestScore) state.bestScore = state.totalScore;
     updateScoreBar();
     showFeedback('🎉');
 
@@ -755,6 +875,7 @@ function selectMatchTile(id) {
   } else {
     // Wrong
     mt.wrong++;
+    recordTodayAnswer(false);
     state.streak = 0;
     updateScoreBar();
     showFeedback('❌');
@@ -867,7 +988,9 @@ function createStars() {
 // ============================================================
 // INIT
 // ============================================================
+loadPersistentProgress();
 createStars();
+updateScoreBar();
 showMode('mc');
 startMCGame();
 </script>
