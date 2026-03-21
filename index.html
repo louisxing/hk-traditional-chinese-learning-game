@@ -64,6 +64,7 @@
   .mc-char:hover { transform: scale(1.05); }
   .mc-meta { text-align: center; color: #888; font-size: 0.95em; margin-bottom: 8px; }
   .mc-question { text-align: center; font-size: 1.15em; color: #555; margin-bottom: 22px; font-weight: bold; }
+  .mc-session { text-align: center; color: #666; font-size: 0.95em; margin-bottom: 14px; }
   .mc-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .mc-opt {
     padding: 14px 16px; border: 3px solid #e0e0e0; border-radius: 16px;
@@ -78,15 +79,9 @@
 
   .mc-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; }
   .mc-progress { font-size: 0.9em; color: #888; }
+  .mc-status { min-height: 24px; margin-top: 14px; text-align: center; font-size: 0.95em; font-weight: bold; color: #666; }
   .progress-bar { background: #eee; border-radius: 10px; height: 8px; width: 200px; overflow: hidden; }
   .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 10px; transition: width 0.4s; }
-  .btn-next {
-    padding: 10px 28px; border: none; border-radius: 20px; font-size: 1em; font-weight: bold;
-    background: linear-gradient(135deg, #667eea, #764ba2); color: white; cursor: pointer;
-    box-shadow: 0 4px 15px rgba(102,126,234,0.4); transition: all 0.2s;
-  }
-  .btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.5); }
-  .btn-next:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
   /* Mode selector for MC */
   .mode-select { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
@@ -450,18 +445,20 @@ let state = {
   bestScore: 0,
   learnedSet: new Set(),
   mc: {
-    questionMode: 'pinyin', // pinyin | word
+    questionMode: 'meaning',
     currentChar: null,
     options: [],
     answered: false,
     questionIndex: 0,
-    total: 10,
     correct: 0,
-    usedChars: [],
-    done: false,
+    wrong: 0,
+    roundIndex: 0,
+    roundsCompleted: 0,
+    deck: [],
+    autoNextTimer: null,
   },
   match: {
-    matchType: 'word', // word | pinyin
+    matchType: 'word',
     tiles: [],
     selected: null,
     matched: [],
@@ -483,7 +480,6 @@ function shuffle(arr) {
   return a;
 }
 function pick(arr, n) { return shuffle(arr).slice(0, n); }
-function randInt(min, max) { return Math.floor(Math.random()*(max-min+1))+min; }
 function showFeedback(emoji) {
   const el = document.createElement('div');
   el.className = 'feedback-overlay';
@@ -497,11 +493,18 @@ function updateScoreBar() {
   document.getElementById('bestScore').textContent = state.bestScore;
   document.getElementById('learned').textContent = state.learnedSet.size;
 }
+function clearMCAutoNext() {
+  if (state.mc.autoNextTimer) {
+    clearTimeout(state.mc.autoNextTimer);
+    state.mc.autoNextTimer = null;
+  }
+}
 
 // ============================================================
 // NAVIGATION
 // ============================================================
 function showMode(mode) {
+  if (mode !== 'mc') clearMCAutoNext();
   state.mode = mode;
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.querySelector('.nav-btn.'+mode).classList.add('active');
@@ -515,109 +518,87 @@ function showMode(mode) {
 // ============================================================
 function startMCGame() {
   const mc = state.mc;
+  clearMCAutoNext();
   mc.questionIndex = 0;
   mc.correct = 0;
-  mc.usedChars = [];
-  mc.done = false;
+  mc.wrong = 0;
+  mc.roundIndex = 0;
+  mc.roundsCompleted = 0;
+  mc.deck = [];
+  mc.currentChar = null;
+  mc.options = [];
   mc.answered = false;
   nextMCQuestion();
 }
 
 function nextMCQuestion() {
   const mc = state.mc;
-  if (mc.questionIndex >= mc.total) {
-    mc.done = true;
-    renderMC();
-    return;
+  clearMCAutoNext();
+  if (!mc.deck.length) {
+    mc.deck = shuffle(CHARS);
+    mc.roundIndex = 0;
+    if (mc.questionIndex > 0) mc.roundsCompleted++;
   }
-  // pick a char not recently used
-  const pool = CHARS.filter(c => !mc.usedChars.includes(c.c));
-  mc.currentChar = pool[randInt(0, pool.length-1)];
-  mc.usedChars.push(mc.currentChar.c);
-  if (mc.usedChars.length > 20) mc.usedChars.shift();
+  mc.currentChar = mc.deck.pop();
+  mc.roundIndex++;
 
-  // Generate options
   const correct = mc.currentChar;
   let wrongPool = CHARS.filter(c => c.c !== correct.c);
-  if (mc.questionMode === 'pinyin') {
-    wrongPool = wrongPool.filter(c => c.p !== correct.p);
-  } else {
-    wrongPool = wrongPool.filter(c => c.ex !== correct.ex);
-  }
+  wrongPool = wrongPool.filter(c => c.m !== correct.m);
   const wrongs = pick(wrongPool, 3);
   mc.options = shuffle([correct, ...wrongs]);
   mc.answered = false;
-  renderMC();
+  if (state.mode === 'mc') renderMC();
 }
 
 function renderMC() {
   const card = document.getElementById('mainCard');
   const mc = state.mc;
-
-  if (mc.done) {
-    const pct = Math.round(mc.correct/mc.total*100);
-    const stars = pct >= 90 ? '⭐⭐⭐' : pct >= 70 ? '⭐⭐' : '⭐';
-    card.innerHTML = `
-      <div class="result-screen">
-        <div class="result-stars">${stars}</div>
-        <h2 style="color:#764ba2">遊戲完成！</h2>
-        <div class="result-score">答對 ${mc.correct} / ${mc.total} 題（${pct}%）</div>
-        <div class="result-btns">
-          <button class="btn-action btn-newgame" onclick="startMCGame()">再玩一次</button>
-          <button class="btn-action btn-restart" onclick="showMode('match')">試配對遊戲</button>
-        </div>
-      </div>`;
-    return;
-  }
-
   const char = mc.currentChar;
   if (!char) { startMCGame(); return; }
 
-  const qText = mc.questionMode === 'pinyin' ? '選出正確的粵拼讀音：' : '選出相關的常用詞語：';
-  const pct = (mc.questionIndex/mc.total*100).toFixed(0);
+  const qText = '選出正確的字義解釋：';
+  const pct = (mc.roundIndex/CHARS.length*100).toFixed(0);
 
   card.innerHTML = `
     <div class="mode-select">
-      <button class="mode-btn ${mc.questionMode==='pinyin'?'active':''}" onclick="setMCMode('pinyin')">粵拼讀音</button>
-      <button class="mode-btn ${mc.questionMode==='word'?'active':''}" onclick="setMCMode('word')">常用詞語</button>
+      <button class="mode-btn active" type="button">字義解釋</button>
     </div>
     <div class="mc-char" onclick="openModal('${char.c}')" title="點擊查看詳情">${char.c}</div>
-    <div class="mc-meta">第${mc.questionIndex+1}題 / 共${mc.total}題 · 年級：小${char.g}</div>
+    <div class="mc-meta">本輪第 ${mc.roundIndex} / ${CHARS.length} 題 · 年級：小${char.g}</div>
+    <div class="mc-session">已答 ${mc.questionIndex} 題 · 答對 ${mc.correct} 題 · 答錯 ${mc.wrong} 題 · 已完成 ${mc.roundsCompleted} 輪</div>
     <div class="mc-question">${qText}</div>
     <div class="mc-options" id="mcOptions">
       ${mc.options.map((opt,i)=>`
         <button class="mc-opt" id="opt${i}" onclick="checkMCAnswer(${i})">
-          ${mc.questionMode==='pinyin' ? opt.p : opt.ex}
+          ${opt.m}
         </button>
       `).join('')}
     </div>
+    <div class="mc-status" id="mcStatus">隨機抽題中，答完會自動跳到下一題；完成 180 題後會重新洗牌。</div>
     <div class="mc-controls">
       <div>
-        <div class="mc-progress">進度 ${mc.questionIndex}/${mc.total}</div>
+        <div class="mc-progress">本輪進度 ${mc.roundIndex}/${CHARS.length}</div>
         <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
       </div>
-      <button class="btn-next" id="btnNext" onclick="nextMCQuestion()" disabled>下一題 →</button>
+      <button class="btn-action btn-restart" onclick="startMCGame()">重新開始</button>
     </div>`;
-}
-
-function setMCMode(mode) {
-  state.mc.questionMode = mode;
-  startMCGame();
 }
 
 function checkMCAnswer(idx) {
   const mc = state.mc;
   if (mc.answered) return;
+  clearMCAutoNext();
   mc.answered = true;
 
   const selected = mc.options[idx];
   const correct = mc.currentChar;
-  const isCorrect = mc.questionMode === 'pinyin'
-    ? selected.p === correct.p
-    : selected.ex === correct.ex;
+  const isCorrect = selected.m === correct.m;
 
   const opts = document.querySelectorAll('.mc-opt');
-  const correctIdx = mc.options.findIndex(o => mc.questionMode==='pinyin' ? o.p===correct.p : o.ex===correct.ex);
+  const correctIdx = mc.options.findIndex(o => o.m === correct.m);
+  const status = document.getElementById('mcStatus');
+  opts.forEach(opt => { opt.disabled = true; });
 
   if (isCorrect) {
     opts[idx].classList.add('correct');
@@ -628,16 +609,25 @@ function checkMCAnswer(idx) {
     if (state.totalScore > state.bestScore) state.bestScore = state.totalScore;
     state.learnedSet.add(correct.c);
     showFeedback(state.streak >= 5 ? '🔥' : '✅');
+    if (status) status.textContent = `答對！+${bonus} 分，正在準備下一題...`;
   } else {
     opts[idx].classList.add('wrong');
     opts[correctIdx].classList.add('correct');
+    mc.wrong++;
+    const penalty = 5;
+    const deducted = Math.min(penalty, state.totalScore);
+    state.totalScore -= deducted;
     state.streak = 0;
     showFeedback('❌');
+    if (status) status.textContent = `答錯了，扣 ${deducted} 分。正確答案是「${correct.m}」，正在準備下一題...`;
   }
 
   mc.questionIndex++;
-  document.getElementById('btnNext').disabled = false;
   updateScoreBar();
+  mc.autoNextTimer = setTimeout(() => {
+    mc.autoNextTimer = null;
+    nextMCQuestion();
+  }, 900);
 }
 
 // ============================================================
@@ -649,11 +639,8 @@ function startMatchGame() {
 
   let tiles = [];
   chars.forEach((ch, i) => {
-    // Character tile
     tiles.push({ id: 'c'+i, pairId: i, type: 'char', content: ch.c, char: ch });
-    // Match tile (meaning or pinyin)
-    const content = mt.matchType === 'word' ? ch.ex : ch.p;
-    tiles.push({ id: 'm'+i, pairId: i, type: mt.matchType, content, char: ch });
+    tiles.push({ id: 'm'+i, pairId: i, type: 'word', content: ch.ex, char: ch });
   });
 
   mt.tiles = shuffle(tiles);
@@ -692,18 +679,17 @@ function renderMatch() {
   card.innerHTML = `
     <div class="match-header"><h2>🎯 配對遊戲 — 找出對應的字詞</h2></div>
     <div class="match-type-sel">
-      <button class="mode-btn ${mt.matchType==='word'?'active':''}" onclick="setMatchType('word')">配常用詞語</button>
-      <button class="mode-btn ${mt.matchType==='pinyin'?'active':''}" onclick="setMatchType('pinyin')">配粵拼</button>
+      <button class="mode-btn active" type="button">繁體字配常用詞語</button>
       <button class="mode-btn ${mt.pairs===4?'active':''}" onclick="setMatchPairs(4)">4對</button>
       <button class="mode-btn ${mt.pairs===6?'active':''}" onclick="setMatchPairs(6)">6對</button>
       <button class="mode-btn ${mt.pairs===8?'active':''}" onclick="setMatchPairs(8)">8對</button>
     </div>
-    <div class="match-status" id="matchStatus">點擊繁體字，再點擊對應的${mt.matchType==='word'?'常用詞語':'粵拼'}！</div>
+    <div class="match-status" id="matchStatus">點擊繁體字，再點擊對應的常用詞語！</div>
     <div class="match-board" id="matchBoard" style="grid-template-columns:repeat(${Math.min(cols,mt.pairs)},1fr)">
       ${mt.tiles.map(t => {
         const isMatched = mt.matched.includes(t.pairId);
         const isSelected = mt.selected === t.id;
-        const typeClass = t.type === 'char' ? '' : (t.type === 'pinyin' ? 'pinyin' : 'meaning');
+        const typeClass = t.type === 'char' ? '' : 'meaning';
         return `<div class="match-tile ${typeClass} ${isMatched?'matched':''} ${isSelected?'selected':''}"
           id="tile_${t.id}" onclick="selectMatchTile('${t.id}')">
           <span class="tile-content">${t.content}</span>
@@ -714,11 +700,6 @@ function renderMatch() {
       <button class="btn-action btn-restart" onclick="startMatchGame()">重新開始</button>
       <button class="btn-action btn-newgame" onclick="showMode('browse')">字詞瀏覽</button>
     </div>`;
-}
-
-function setMatchType(type) {
-  state.match.matchType = type;
-  startMatchGame();
 }
 function setMatchPairs(n) {
   state.match.pairs = n;
@@ -762,7 +743,7 @@ function selectMatchTile(id) {
 
     const status = document.getElementById('matchStatus');
     status.className = 'match-status success';
-    status.textContent = `正確！「${tile.char.c}」= ${mt.matchType==='word'?tile.char.ex:tile.char.p} ✓`;
+    status.textContent = `正確！「${tile.char.c}」= ${tile.char.ex} ✓`;
 
     if (mt.matched.length === mt.pairs) {
       setTimeout(()=>{ mt.done = true; renderMatch(); }, 800);
@@ -843,7 +824,13 @@ function openModal(char) {
   const ch = CHARS.find(c=>c.c===char);
   if (!ch) return;
   document.getElementById('modalChar').textContent = ch.c;
-  document.getElementById('modalPinyin').textContent = '粵拼：' + ch.p;
+  const pinyinEl = document.getElementById('modalPinyin');
+  if (state.mode === 'browse') {
+    pinyinEl.textContent = '粵拼：' + ch.p;
+    pinyinEl.style.display = 'block';
+  } else {
+    pinyinEl.style.display = 'none';
+  }
   document.getElementById('modalMeaning').textContent = '字義：' + ch.m;
   document.getElementById('modalGrade').textContent = '年級：小學' + ch.g + '年級';
   document.getElementById('modalExample').innerHTML = '<strong>常用詞語：</strong>' + ch.ex;
