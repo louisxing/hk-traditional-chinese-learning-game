@@ -1654,7 +1654,11 @@ function checkMCAnswer(idx) {
   const opts = document.querySelectorAll('.mc-opt');
   const correctIdx = mc.options.findIndex(o => o.m === correct.m);
   const status = document.getElementById('mcStatus');
-  opts.forEach(opt => { opt.disabled = true; });
+  opts.forEach(opt => {
+    opt.disabled = true;
+    // 清除 hover 状态：触发 mouseleave 事件
+    opt.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+  });
 
   if (isCorrect) {
     opts[idx].classList.add('correct');
