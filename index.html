@@ -5,9 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>香港小學繁體字學習遊戲</title>
 <style>
+  :root {
+    --rounded-font: 'Arial Rounded MT Bold', 'Nunito', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    --panel-white: rgba(255,255,255,0.95);
+    --panel-border: rgba(255,255,255,0.34);
+    --shadow-soft: 0 16px 36px rgba(42, 52, 84, 0.18);
+    --theme-start: #7c8dff;
+    --theme-end: #8b5cf6;
+    --theme-soft: #f4f1ff;
+    --theme-border: #c2b5ff;
+    --theme-text: #5b42b4;
+    --review-yellow: #fff7bf;
+    --review-border: #f4cb52;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: 'Arial', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    font-family: var(--rounded-font);
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     overflow-x: hidden;
@@ -22,6 +35,12 @@
   .header { text-align: center; margin-bottom: 30px; }
   .header h1 { font-size: 2.4em; color: #fff; text-shadow: 3px 3px 6px rgba(0,0,0,0.4); margin-bottom: 8px; }
   .header .subtitle { color: #e0d7ff; font-size: 1.1em; }
+  .header-stickers {
+    display: inline-flex; gap: 10px; margin-top: 12px; padding: 8px 16px;
+    border-radius: 999px; background: rgba(255,255,255,0.16);
+    color: white; font-size: 1.1em; backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.22);
+  }
   .best-score-banner {
     max-width: 760px; margin: 0 auto 20px;
     background: rgba(255,255,255,0.16); backdrop-filter: blur(12px);
@@ -69,6 +88,171 @@
   }
   .daily-stat-label { font-size: 0.95em; color: rgba(255,255,255,0.88); }
   .daily-stat-value { font-size: 1.35em; font-weight: bold; }
+  .sensory-toolbar,
+  .learning-dashboard {
+    max-width: 960px; margin: 0 auto 20px;
+  }
+  .sensory-toolbar {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    justify-content: space-between; align-items: center;
+    background: rgba(255,255,255,0.18); backdrop-filter: blur(12px);
+    border: 2px solid var(--panel-border); border-radius: 24px;
+    padding: 14px 18px; color: white;
+    box-shadow: var(--shadow-soft);
+  }
+  .toolbar-group {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  }
+  .toolbar-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.14); border-radius: 999px;
+    padding: 10px 14px; border: 1px solid rgba(255,255,255,0.22);
+  }
+  .toolbar-pill strong { font-size: 1em; }
+  .toolbar-pill small { color: rgba(255,255,255,0.8); font-size: 0.82em; }
+  .audio-toggle {
+    border: none; border-radius: 999px; padding: 10px 16px;
+    background: linear-gradient(135deg, #ffe29a, #ffb36f);
+    color: #70441f; font-weight: bold; cursor: pointer;
+    box-shadow: 0 8px 18px rgba(255,179,111,0.26);
+  }
+  .audio-toggle:disabled { opacity: 0.7; cursor: not-allowed; }
+  .pronounce-btn {
+    border: none; border-radius: 999px; padding: 10px 16px;
+    background: linear-gradient(135deg, #fff4b8, #ffd166);
+    color: #7a4c10; font-weight: bold; cursor: pointer;
+    box-shadow: 0 8px 18px rgba(255,209,102,0.28);
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    min-height: 44px;
+  }
+  .pronounce-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px rgba(255,209,102,0.34);
+  }
+  .pronounce-btn:disabled { opacity: 0.65; cursor: not-allowed; box-shadow: none; }
+  .pronounce-btn.inline { padding: 10px 18px; }
+  .volume-control {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 8px 14px; border-radius: 999px;
+    background: rgba(255,255,255,0.12); color: white;
+  }
+  .volume-control input[type="range"] {
+    accent-color: #ffd166; width: 130px;
+  }
+  .volume-control input[type="range"]:disabled { opacity: 0.55; }
+  .learning-dashboard {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 14px;
+  }
+  .dashboard-panel {
+    background: rgba(255,255,255,0.18); backdrop-filter: blur(12px);
+    border: 2px solid var(--panel-border); border-radius: 24px;
+    padding: 16px 18px; color: white; box-shadow: var(--shadow-soft);
+    min-height: 188px;
+  }
+  .dashboard-title {
+    font-size: 1.02em; font-weight: bold; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dashboard-note {
+    font-size: 0.9em; color: rgba(255,255,255,0.86); line-height: 1.55;
+  }
+  .history-chart {
+    display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px;
+    align-items: end; min-height: 118px;
+  }
+  .history-bar-wrap { text-align: center; }
+  .history-bar {
+    height: 104px; display: flex; align-items: flex-end; justify-content: center;
+  }
+  .history-bar-fill {
+    width: 100%; max-width: 30px; border-radius: 16px 16px 8px 8px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,212,102,0.95));
+    box-shadow: 0 8px 20px rgba(255,212,102,0.28);
+    min-height: 8px; position: relative; overflow: hidden;
+    transform-origin: bottom center; animation: fade-rise 0.7s ease;
+  }
+  .history-bar-fill::after {
+    content: ''; position: absolute; inset: 0; opacity: 0.48;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.7), transparent);
+    animation: shimmer 2.2s linear infinite;
+  }
+  .history-day {
+    margin-top: 6px; font-size: 0.78em; color: rgba(255,255,255,0.85);
+  }
+  .history-value {
+    margin-top: 4px; font-size: 0.8em; font-weight: bold;
+  }
+  .growth-tree {
+    position: relative; min-height: 122px; padding-top: 8px;
+  }
+  .tree-canopy {
+    width: 116px; height: 86px; margin: 0 auto;
+    background: radial-gradient(circle at 30% 28%, #d3ffcf 0%, #6ee7b7 44%, #10b981 100%);
+    border-radius: 56% 54% 48% 50%;
+    position: relative; box-shadow: inset 0 -10px 20px rgba(7,94,80,0.16);
+  }
+  .tree-canopy::before,
+  .tree-canopy::after {
+    content: '✨'; position: absolute; color: rgba(255,255,255,0.75);
+    animation: float-spark 3s ease-in-out infinite;
+  }
+  .tree-canopy::before { left: 16px; top: 10px; }
+  .tree-canopy::after { right: 18px; bottom: 14px; animation-delay: 1.2s; }
+  .tree-trunk {
+    width: 28px; height: 62px; margin: -8px auto 0;
+    background: linear-gradient(180deg, #b77941, #8c5428);
+    border-radius: 14px; position: relative;
+  }
+  .tree-base {
+    width: 84px; height: 14px; border-radius: 999px; margin: 8px auto 0;
+    background: rgba(255,255,255,0.28);
+  }
+  .tree-leaf-count {
+    position: absolute; inset: 22px 0 auto; text-align: center;
+    font-size: 1.45em; font-weight: bold; color: #0f5b4e;
+  }
+  .tree-stage {
+    text-align: center; font-weight: bold; margin-top: 10px;
+  }
+  .tree-progress {
+    text-align: center; font-size: 0.9em; color: rgba(255,255,255,0.88); margin-top: 6px;
+  }
+  .review-stats {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .review-stat-card {
+    border-radius: 18px; padding: 10px 12px;
+    background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.2);
+  }
+  .review-preview {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;
+  }
+  .review-preview-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border-radius: 14px;
+    background: rgba(255,248,200,0.95); color: #8a5a00;
+    border: 2px solid #f6d365;
+  }
+  .review-preview-chip .char { font-size: 1.35em; font-weight: bold; }
+  .badge-grid {
+    display: flex; flex-wrap: wrap; gap: 10px;
+  }
+  .achievement-badge {
+    flex: 1 1 120px; min-width: 118px;
+    border-radius: 18px; padding: 10px 12px;
+    background: rgba(255,255,255,0.13); border: 1px solid rgba(255,255,255,0.18);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .achievement-badge.unlocked {
+    background: linear-gradient(135deg, rgba(255,243,188,0.95), rgba(255,214,102,0.92));
+    color: #7c4a11; box-shadow: 0 10px 24px rgba(255,214,102,0.22);
+  }
+  .achievement-badge:hover { transform: translateY(-3px); }
+  .achievement-badge .icon { display: block; font-size: 1.45em; margin-bottom: 6px; }
+  .achievement-badge .name { display: block; font-weight: bold; margin-bottom: 4px; }
+  .achievement-badge .desc { font-size: 0.82em; line-height: 1.45; }
 
   /* Nav */
   .nav { display: flex; gap: 12px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap; }
@@ -82,63 +266,172 @@
   .nav-btn.news { background: linear-gradient(135deg, #f6b73c, #fc4a1a); color: white; }
   .nav-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
   .nav-btn.active { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
+  button:active,
+  .char-tile:active,
+  .match-tile:active,
+  .mc-opt:active,
+  .news-item:active { transform: translateY(1px) scale(0.98); }
 
   /* Card */
   .card {
     background: rgba(255,255,255,0.95); border-radius: 24px;
     padding: clamp(24px, 3vw, 34px); box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    position: relative; overflow: hidden;
   }
+  .card::before,
+  .card::after {
+    content: ''; position: absolute; pointer-events: none;
+    border-radius: 999px; opacity: 0.2; filter: blur(2px);
+  }
+  .card::before {
+    width: 110px; height: 110px; background: #ffd166;
+    top: -36px; right: -26px;
+  }
+  .card::after {
+    width: 86px; height: 86px; background: #7bdff2;
+    bottom: -28px; left: -22px;
+  }
+  .theme-surface {
+    --theme-shadow: rgba(124, 141, 255, 0.18);
+    background: linear-gradient(180deg, rgba(255,255,255,0.96), var(--theme-soft));
+    border: 2px solid var(--theme-border);
+    box-shadow: 0 12px 28px var(--theme-shadow);
+  }
+  .theme-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 12px; border-radius: 999px;
+    background: rgba(255,255,255,0.8); color: var(--theme-text);
+    border: 1px solid var(--theme-border); font-size: 0.88em; font-weight: bold;
+  }
+  .category-legend {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    margin-bottom: 18px;
+  }
+  .category-legend-item {
+    display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 8px 12px; border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.96), var(--theme-soft));
+    border: 2px solid var(--theme-border); color: var(--theme-text);
+    font-size: 0.85em; font-weight: bold; box-shadow: 0 8px 18px rgba(91,66,180,0.08);
+  }
+  .category-legend-sample { font-size: 0.82em; font-weight: normal; opacity: 0.9; }
 
   /* Multiple Choice */
+  .mc-stage {
+    padding: 18px 18px 22px; border-radius: 24px; margin-bottom: 18px;
+    position: relative; overflow: hidden;
+  }
+  .mc-stage.review-due {
+    background: linear-gradient(180deg, rgba(255,247,191,0.8), var(--theme-soft));
+    border-color: var(--review-border);
+    box-shadow: 0 16px 30px rgba(244,203,82,0.18);
+  }
+  .mc-stage.review-due::after {
+    content: '⏰ 複習時間到'; position: absolute; top: 12px; right: 14px;
+    font-size: 0.82em; font-weight: bold; color: #91620a;
+    background: rgba(255,255,255,0.82); padding: 6px 10px; border-radius: 999px;
+  }
+  .mc-theme-row,
+  .mc-lesson-row {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+  }
+  .mc-emoji-burst {
+    text-align: center; font-size: clamp(2.6em, 6vw, 4em);
+    margin-bottom: 10px; animation: fade-rise 0.7s ease;
+    transform-origin: center;
+  }
   .mc-char {
     text-align: center; font-size: 7em; line-height: 1.1;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, var(--theme-start), var(--theme-end));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text; margin-bottom: 10px; cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.2s, filter 0.2s;
+    animation: char-fade-in 0.55s ease both;
   }
-  .mc-char:hover { transform: scale(1.05); }
+  .mc-char:hover { transform: scale(1.05); filter: drop-shadow(0 10px 24px rgba(118,75,162,0.18)); }
+  .mc-char.celebrate { animation: char-bounce-glow 0.8s ease; }
+  .mc-char.mistake { animation: char-soft-shake 0.55s ease; }
+  .mc-char-actions {
+    display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .mc-support {
+    text-align: center; color: #605774; font-size: 0.98em; margin-bottom: 4px;
+  }
+  .mc-stars {
+    text-align: center; color: #f59e0b; font-size: 1.15em; margin-bottom: 8px;
+  }
   .mc-meta { text-align: center; color: #888; font-size: 0.95em; margin-bottom: 8px; }
   .mc-question { text-align: center; font-size: 1.15em; color: #555; margin-bottom: 24px; font-weight: bold; }
   .mc-session { text-align: center; color: #666; font-size: 0.95em; margin-bottom: 14px; }
   .mc-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
   .mc-opt {
     min-height: 104px; padding: 18px 20px; border: 3px solid #e0e0e0; border-radius: 18px;
-    background: linear-gradient(180deg, #ffffff 0%, #faf7ff 100%); cursor: pointer; font-size: 1.5em; font-weight: bold;
-    line-height: 1.35; transition: all 0.25s; text-align: center; color: #333;
+    background: linear-gradient(180deg, #ffffff 0%, #faf7ff 100%); cursor: pointer; font-size: 1.15em; font-weight: bold;
+    line-height: 1.35; transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    text-align: center; color: #333; position: relative; overflow: hidden;
     display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 24px rgba(118,75,162,0.08);
+    flex-direction: column; gap: 8px;
   }
-  .mc-opt:hover { border-color: #764ba2; background: #f5f0ff; transform: translateY(-3px); box-shadow: 0 16px 28px rgba(118,75,162,0.16); }
-  .mc-opt.correct { border-color: #43e97b; background: #e8fff4; color: #1a7a4a; animation: correct-flash 0.5s; }
+  .mc-opt::after {
+    content: ''; position: absolute; inset: 0; opacity: 0.28;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.65), transparent);
+    transform: translateX(-120%);
+    transition: transform 0.35s ease;
+  }
+  .mc-opt:hover {
+    border-color: var(--theme-border); background: var(--theme-soft); transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 16px 28px rgba(118,75,162,0.16);
+  }
+  .mc-opt:hover::after { transform: translateX(120%); }
+  .mc-opt.correct { border-color: #43e97b; background: #e8fff4; color: #1a7a4a; animation: correct-flash 0.5s, option-glow 0.7s ease; }
   .mc-opt.wrong { border-color: #f5576c; background: #fff0f2; color: #c0392b; animation: shake 0.4s; }
+  .mc-opt-emoji {
+    font-size: clamp(2em, 6vw, 3em); line-height: 1; transform-origin: center;
+  }
+  .mc-opt.picture { min-height: 140px; }
+  .mc-opt.picture .mc-opt-emoji { animation: emoji-zoom-in 0.45s ease; }
+  .mc-opt-title { font-size: 1.02em; }
+  .mc-opt-subtitle { font-size: 0.82em; color: #6d6782; font-weight: normal; line-height: 1.45; }
   @keyframes correct-flash { 0%{transform:scale(1)} 50%{transform:scale(1.05)} 100%{transform:scale(1)} }
   @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
 
   .mc-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; }
   .mc-progress { font-size: 0.9em; color: #888; }
-  .mc-status { min-height: 24px; margin-top: 14px; text-align: center; font-size: 0.95em; font-weight: bold; color: #666; }
+  .mc-status { min-height: 24px; margin-top: 14px; text-align: center; font-size: 0.98em; font-weight: bold; color: #666; }
   .progress-bar { background: #eee; border-radius: 10px; height: 8px; width: 200px; overflow: hidden; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 10px; transition: width 0.4s; }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--theme-start), var(--theme-end)); border-radius: 10px;
+    transition: width 0.4s; position: relative; overflow: hidden;
+  }
+  .progress-fill::after {
+    content: ''; position: absolute; inset: 0; opacity: 0.6;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent);
+    animation: shimmer 2s linear infinite;
+  }
 
   /* Mode selector for MC */
   .mode-select { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
   .mode-btn {
     padding: 8px 20px; border: 2px solid #ddd; border-radius: 20px;
     background: white; cursor: pointer; font-size: 0.9em; transition: all 0.2s;
+    font-weight: bold;
   }
-  .mode-btn.active { border-color: #764ba2; background: #f5f0ff; color: #764ba2; font-weight: bold; }
+  .mode-btn.active { border-color: var(--theme-border); background: var(--theme-soft); color: var(--theme-text); font-weight: bold; }
 
   /* Matching Game */
   .match-header { text-align: center; margin-bottom: 20px; }
   .match-header h2 { font-size: 1.4em; color: #444; }
   .match-subtitle { color: #666; font-size: 0.98em; margin-top: 8px; }
+  .match-board-wrap { position: relative; }
   .match-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
   .match-tile {
     aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
     border-radius: 16px; cursor: pointer; font-weight: bold; transition: all 0.3s;
     border: 3px solid transparent; padding: 10px; text-align: center;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white; font-size: 1.5em; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    background: linear-gradient(135deg, var(--theme-start), var(--theme-end));
+    color: white; font-size: 1.35em; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     user-select: none; position: relative; overflow: hidden;
   }
   .match-tile .tile-content {
@@ -146,20 +439,28 @@
     font-size: inherit; line-height: 1.2; overflow-wrap: anywhere;
     word-break: break-word;
   }
+  .match-tile .tile-emoji {
+    display: block; font-size: 1.45em; line-height: 1; margin-bottom: 6px;
+  }
   .match-tile.meaning {
-    background: linear-gradient(135deg, #f093fb, #f5576c);
     font-size: 1.45em;
     padding: 12px 10px;
   }
   .match-tile.meaning.meaning-compact { font-size: 1.3em; }
-  .match-tile.pinyin {
-    background: linear-gradient(135deg, #4facfe, #00f2fe);
-    font-size: 0.85em;
-  }
   .match-tile:hover:not(.matched):not(.disabled) { transform: translateY(-4px) scale(1.03); box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
   .match-tile.selected { border-color: #ffd700; box-shadow: 0 0 0 3px #ffd700; transform: scale(1.05); }
   .match-tile.matched { opacity: 0.4; cursor: default; transform: none; filter: grayscale(0.5); }
   .match-tile.wrong-flash { animation: wrong-shake 0.4s; border-color: #f5576c; }
+  .match-tile.match-pop { animation: match-pair-pop 0.72s ease; }
+  .match-connection-layer {
+    position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+  }
+  .match-connection {
+    position: absolute; height: 6px; border-radius: 999px;
+    background: linear-gradient(90deg, rgba(255,209,102,0.2), rgba(255,255,255,0.96), rgba(255,209,102,0.2));
+    box-shadow: 0 0 16px rgba(255,209,102,0.85);
+    transform-origin: left center; animation: connection-pop 0.7s ease forwards;
+  }
   @keyframes wrong-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
   .match-controls { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
   .btn-action {
@@ -190,13 +491,22 @@
   .char-grid::-webkit-scrollbar { width: 6px; }
   .char-grid::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
   .char-tile {
-    background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 14px;
-    min-height: 96px; padding: 12px 8px; text-align: center; cursor: pointer; transition: all 0.2s;
+    background: linear-gradient(180deg, rgba(255,255,255,0.96), var(--theme-soft)); border-radius: 18px;
+    min-height: 140px; padding: 12px 10px; text-align: center; cursor: pointer; transition: all 0.2s;
     box-shadow: 0 3px 8px rgba(0,0,0,0.12); display: flex; flex-direction: column; justify-content: center;
+    border: 2px solid var(--theme-border); position: relative; overflow: hidden;
   }
   .char-tile:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
-  .char-tile .ct { font-size: 1.8em; color: white; display: block; }
-  .char-tile .cp { font-size: 0.72em; color: rgba(255,255,255,0.88); display: block; margin-top: 4px; line-height: 1.25; min-height: 2.3em; }
+  .char-tile.review-due { background: linear-gradient(180deg, rgba(255,247,191,0.96), var(--theme-soft)); border-color: var(--review-border); }
+  .char-tile .ct { font-size: 2em; color: var(--theme-text); display: block; }
+  .char-tile .char-emoji { font-size: 1.4em; margin-bottom: 4px; }
+  .char-tile .cp { font-size: 0.75em; color: #5d5970; display: block; margin-top: 4px; line-height: 1.35; min-height: 2.7em; }
+  .char-tile .char-stars { font-size: 0.82em; color: #f59e0b; margin-top: 6px; }
+  .char-tile .char-theme-tag {
+    position: absolute; top: 8px; right: 8px; font-size: 0.72em;
+    padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,0.86);
+    color: var(--theme-text); border: 1px solid var(--theme-border);
+  }
 
   /* News mission */
   .news-shell { display: flex; flex-direction: column; gap: 18px; }
@@ -481,17 +791,22 @@
     align-items: center; justify-content: center; padding: 20px;
   }
   .modal-box {
-    background: white; border-radius: 24px; padding: 35px; max-width: 400px; width: 100%;
+    background: linear-gradient(180deg, #ffffff, var(--theme-soft, #ffffff));
+    border: 2px solid var(--theme-border, transparent);
+    border-radius: 24px; padding: 35px; max-width: 400px; width: 100%;
     box-shadow: 0 30px 80px rgba(0,0,0,0.3); text-align: center; animation: modal-in 0.3s;
   }
   @keyframes modal-in { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+  .modal-emoji { font-size: 2em; margin-bottom: 8px; }
   .modal-char { font-size: 5em; margin-bottom: 10px; }
-  .modal-pinyin { font-size: 1.3em; color: #764ba2; font-weight: bold; margin-bottom: 8px; }
+  .modal-stars { color: #f59e0b; font-size: 1em; margin-bottom: 10px; }
+  .modal-pinyin { font-size: 1.3em; color: var(--theme-text, #764ba2); font-weight: bold; margin-bottom: 8px; }
   .modal-meaning { font-size: 1em; color: #555; margin-bottom: 6px; line-height: 1.5; }
   .modal-grade { font-size: 0.85em; color: #888; margin-bottom: 20px; }
-  .modal-example { background: #f5f0ff; border-radius: 12px; padding: 12px; font-size: 0.95em; color: #444; margin-bottom: 20px; line-height: 1.6; }
+  .modal-example { background: rgba(255,255,255,0.86); border-radius: 12px; padding: 12px; font-size: 0.95em; color: #444; margin-bottom: 20px; line-height: 1.6; }
   .modal-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
   .modal-note { margin-top: 14px; color: #7a6d64; font-size: 0.9em; line-height: 1.5; }
+  .modal-actions > * { flex: 1 1 150px; }
   .modal-close {
     padding: 10px 30px; border: none; border-radius: 20px; font-size: 1em;
     background: linear-gradient(135deg, #667eea, #764ba2); color: white; cursor: pointer;
@@ -507,6 +822,11 @@
   .feedback-overlay {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     font-size: 4em; z-index: 200; pointer-events: none; animation: feedback-anim 1s forwards;
+    text-align: center;
+  }
+  .feedback-overlay .feedback-text {
+    display: block; margin-top: 6px; font-size: 0.28em; color: white;
+    text-shadow: 0 3px 10px rgba(0,0,0,0.35); font-weight: bold;
   }
   @keyframes feedback-anim { 0%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-80%) scale(1.5)} }
 
@@ -525,6 +845,71 @@
   .history-panel-title { font-size: 1.05em; font-weight: bold; margin-bottom: 10px; }
   .history-panel-score { font-size: 2em; font-weight: bold; margin-bottom: 6px; }
   .history-panel-note { color: rgba(255,255,255,0.82); font-size: 0.95em; line-height: 1.5; }
+  .celebration-layer {
+    position: fixed; inset: 0; pointer-events: none; z-index: 180; overflow: hidden;
+  }
+  .confetti-piece,
+  .firework-piece {
+    position: absolute; width: 12px; height: 18px; border-radius: 4px;
+    opacity: 0; transform: translate3d(0,0,0) rotate(0deg);
+  }
+  .confetti-piece { animation: confetti-fall 1.8s ease-out forwards; }
+  .firework-piece {
+    width: 8px; height: 8px; border-radius: 50%;
+    animation: firework-burst 1.15s ease-out forwards;
+  }
+  .speakable-char,
+  .speakable-tile { cursor: pointer; }
+  .speakable-char.speaking,
+  .speakable-tile.speaking,
+  .pronounce-btn.speaking { animation: speech-pulse 0.9s ease; }
+  @keyframes shimmer { 0%{transform:translateX(-120%)} 100%{transform:translateX(120%)} }
+  @keyframes fade-rise { from{opacity:0;transform:translateY(12px) scale(0.96)} to{opacity:1;transform:translateY(0) scale(1)} }
+  @keyframes float-spark { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  @keyframes char-fade-in { from{opacity:0;transform:scale(0.84)} to{opacity:1;transform:scale(1)} }
+  @keyframes char-bounce-glow {
+    0%{transform:scale(1)}
+    40%{transform:scale(1.16)}
+    70%{transform:scale(0.97)}
+    100%{transform:scale(1); filter: drop-shadow(0 0 24px rgba(255,215,102,0.72))}
+  }
+  @keyframes char-soft-shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-10px)}
+    40%{transform:translateX(8px)}
+    60%{transform:translateX(-6px)}
+    80%{transform:translateX(4px)}
+  }
+  @keyframes emoji-zoom-in { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
+  @keyframes option-glow {
+    0%,100%{box-shadow: 0 10px 24px rgba(67,233,123,0.18)}
+    50%{box-shadow: 0 0 24px rgba(67,233,123,0.45)}
+  }
+  @keyframes speech-pulse {
+    0%{transform:scale(1); filter: drop-shadow(0 0 0 rgba(255,209,102,0))}
+    35%{transform:scale(1.08); filter: drop-shadow(0 0 20px rgba(255,209,102,0.85))}
+    70%{transform:scale(0.98); filter: drop-shadow(0 0 12px rgba(255,209,102,0.45))}
+    100%{transform:scale(1); filter: drop-shadow(0 0 0 rgba(255,209,102,0))}
+  }
+  @keyframes connection-pop {
+    0%{opacity:0;transform:scaleX(0)}
+    20%{opacity:1}
+    100%{opacity:0;transform:scaleX(1)}
+  }
+  @keyframes match-pair-pop {
+    0%{transform:scale(1)}
+    35%{transform:scale(1.12)}
+    65%{transform:scale(0.96)}
+    100%{transform:scale(1)}
+  }
+  @keyframes confetti-fall {
+    0%{opacity:1;transform:translate3d(0, -10vh, 0) rotate(0deg)}
+    100%{opacity:0;transform:translate3d(var(--x, 0), 105vh, 0) rotate(var(--r, 540deg))}
+  }
+  @keyframes firework-burst {
+    0%{opacity:1;transform:translate3d(0,0,0) scale(0.6)}
+    100%{opacity:0;transform:translate3d(var(--x,0), var(--y,0), 0) scale(1.25)}
+  }
 
   /* Responsive */
   @media (max-width: 760px) {
@@ -533,14 +918,24 @@
     .match-board { grid-template-columns: repeat(4, 1fr); }
     .header h1 { font-size: 1.8em; }
     .daily-panel-grid { grid-template-columns: 1fr; }
+    .sensory-toolbar { flex-direction: column; align-items: stretch; }
+    .toolbar-group { justify-content: center; }
     .news-layout { grid-template-columns: 1fr; }
     .news-items,
     .news-content { max-height: none; }
   }
   @media (max-width: 600px) {
-    .mc-opt { min-height: 92px; padding: 16px 18px; font-size: 1.5em; }
+    .mc-opt { min-height: 92px; padding: 16px 18px; font-size: 1.05em; }
     #app { padding: 14px; }
     .card { padding: 18px; border-radius: 20px; }
+    .dashboard-panel { min-height: 168px; }
+    .mc-char-actions,
+    .modal-actions { flex-direction: column; }
+    .mc-char-actions .pronounce-btn,
+    .modal-actions .pronounce-btn,
+    .modal-actions .modal-review,
+    .modal-actions .modal-close { width: 100%; }
+    .char-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
     .news-toolbar,
     .news-custom,
     .news-summary-bar,
@@ -574,6 +969,7 @@
   <div class="header">
     <h1>🌟 繁體字學習遊戲 🌟</h1>
     <div class="subtitle">參考香港教育局《常用中文字表》方向擴充至 1080 項 · 配合香港日常詞語</div>
+    <div class="header-stickers">☁️ 🌈 ⭐ 📚 🌱 🎉</div>
   </div>
   <div class="best-score-banner">
     <span class="best-score-label">歷史最高總得分</span>
@@ -599,6 +995,40 @@
       </div>
     </div>
   </div>
+  <div class="sensory-toolbar">
+    <div class="toolbar-group">
+      <button class="audio-toggle" id="muteToggle" onclick="toggleMute()">🔊 音效開啟</button>
+      <label class="volume-control">
+        <span>🔉 音量</span>
+        <input id="volumeSlider" type="range" min="0" max="100" value="60" oninput="setVolume(this.value)">
+      </label>
+    </div>
+    <div class="toolbar-group">
+      <div class="toolbar-pill"><span>🧠</span><strong id="reviewDueSummary">需要複習 0 個字</strong></div>
+      <div class="toolbar-pill"><span>🌱</span><strong id="treeStageSummary">學習樹剛發芽</strong></div>
+      <div class="toolbar-pill"><span>🗣️</span><strong id="speechStatus">粵語發音準備中</strong></div>
+    </div>
+  </div>
+  <div class="learning-dashboard">
+    <div class="dashboard-panel">
+      <div class="dashboard-title">📈 學習歷程曲線</div>
+      <div class="history-chart" id="historyChart"></div>
+      <div class="dashboard-note" id="historyChartNote">最近 7 天的練習表現會顯示在這裡。</div>
+    </div>
+    <div class="dashboard-panel">
+      <div class="dashboard-title">🌳 已學成長樹</div>
+      <div class="growth-tree" id="growthTree"></div>
+      <div class="dashboard-note" id="growthTreeNote">每學會更多字，樹冠就會更茂盛。</div>
+    </div>
+    <div class="dashboard-panel">
+      <div class="dashboard-title">📝 智能複習</div>
+      <div class="review-stats" id="reviewStatsPanel"></div>
+    </div>
+    <div class="dashboard-panel">
+      <div class="dashboard-title">🏅 成就徽章</div>
+      <div class="badge-grid" id="achievementPanel"></div>
+    </div>
+  </div>
   <div class="nav">
     <button class="nav-btn mc active" onclick="showMode('mc')">📝 選擇題</button>
     <button class="nav-btn match" onclick="showMode('match')">🎯 配對遊戲</button>
@@ -614,18 +1044,22 @@
 </div>
 <div id="modalOverlay" class="modal-overlay" style="display:none" onclick="closeModal(event)">
   <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-char" id="modalChar"></div>
+    <div class="modal-emoji" id="modalEmoji"></div>
+    <div class="modal-char speakable-char" id="modalChar" onclick="speakModalChar()" title="點擊重聽粵語發音"></div>
+    <div class="modal-stars" id="modalStars"></div>
     <div class="modal-pinyin" id="modalPinyin"></div>
     <div class="modal-meaning" id="modalMeaning"></div>
     <div class="modal-grade" id="modalGrade"></div>
     <div class="modal-example" id="modalExample"></div>
     <div class="modal-actions">
+      <button class="pronounce-btn inline" id="modalSpeakBtn" data-pronounce-btn="true" onclick="speakModalChar()">🗣️ 聽粵語發音</button>
       <button class="modal-review" id="modalReviewBtn" onclick="toggleModalReviewChar()">加入複習清單</button>
       <button class="modal-close" onclick="closeModal()">關閉</button>
     </div>
     <div class="modal-note" id="modalNote"></div>
   </div>
 </div>
+<div class="celebration-layer" id="celebrationLayer" aria-hidden="true"></div>
 
 <script>
 // ============================================================
@@ -1766,6 +2200,94 @@ const NEWS_CACHE_LIMIT = 36;
 // STATE
 // ============================================================
 const MATCH_PAIRS = 10;
+// 多模態主題配置：
+// 每個主題都綁定顏色、emoji 和標籤，讓孩子可以用多種感官一起記住字詞。
+const REVIEW_INTERVALS_MS = [
+  20 * 60 * 1000,
+  24 * 60 * 60 * 1000,
+  3 * 24 * 60 * 60 * 1000,
+  7 * 24 * 60 * 60 * 1000,
+  14 * 24 * 60 * 60 * 1000,
+];
+const SOUND_COLORS = ['#ff6b6b', '#ffd166', '#4ecdc4', '#5b8def', '#c77dff', '#ff9f1c'];
+const CATEGORY_SAMPLE_TEXT = {
+  learning: '書 學 校',
+  nature: '山 河 樹',
+  family: '家 爸 媽',
+  food: '飯 麵 菜',
+  action: '跑 跳 吃',
+};
+const CATEGORY_THEMES = {
+  learning: {
+    label: '學習類',
+    icon: '📘',
+    colors: { start: '#5b8def', end: '#4361ee', soft: '#edf3ff', border: '#9bbdff', text: '#3159c8' },
+    emojis: '📘✏️'
+  },
+  nature: {
+    label: '自然類',
+    icon: '🌿',
+    colors: { start: '#43c77b', end: '#1f9d68', soft: '#ecfff2', border: '#97e0b3', text: '#18744d' },
+    emojis: '🌿🌎'
+  },
+  family: {
+    label: '家庭類',
+    icon: '💗',
+    colors: { start: '#ff8fb3', end: '#f15bb5', soft: '#fff0f6', border: '#ffc2d6', text: '#b43479' },
+    emojis: '🏠💗'
+  },
+  food: {
+    label: '食物類',
+    icon: '🍊',
+    colors: { start: '#ffb347', end: '#f77f00', soft: '#fff5e8', border: '#ffd29a', text: '#c56a00' },
+    emojis: '🍊🍽️'
+  },
+  action: {
+    label: '動作類',
+    icon: '🏃',
+    colors: { start: '#ff6b6b', end: '#ef476f', soft: '#fff0f2', border: '#ffb0ba', text: '#c43a53' },
+    emojis: '🏃💨'
+  },
+  general: {
+    label: '綜合類',
+    icon: '🌈',
+    colors: { start: '#8b5cf6', end: '#7c3aed', soft: '#f4f1ff', border: '#cab8ff', text: '#5f3dc4' },
+    emojis: '🌈✨'
+  },
+};
+const CATEGORY_CHAR_OVERRIDES = {
+  書: 'learning', 學: 'learning', 校: 'learning', 課: 'learning', 習: 'learning', 筆: 'learning', 字: 'learning',
+  山: 'nature', 河: 'nature', 樹: 'nature', 海: 'nature', 林: 'nature', 雨: 'nature', 花: 'nature', 草: 'nature',
+  家: 'family', 爸: 'family', 媽: 'family', 子: 'family', 女: 'family', 哥: 'family', 弟: 'family', 妹: 'family',
+  飯: 'food', 麵: 'food', 菜: 'food', 茶: 'food', 果: 'food', 肉: 'food', 蛋: 'food', 湯: 'food', 奶: 'food', 牛: 'food',
+  跑: 'action', 跳: 'action', 吃: 'action', 食: 'food', 飲: 'food', 行: 'action', 玩: 'action', 笑: 'action', 拍: 'action'
+};
+const CATEGORY_KEYWORDS = {
+  learning: ['學', '校', '書', '課', '讀', '寫', '筆', '字', '題', '答', '問', '習', '測', '考', '老師', '學生', '文具', '圖書'],
+  nature: ['山', '河', '樹', '海', '林', '雨', '雪', '雲', '風', '花', '草', '魚', '鳥', '石', '木', '天', '自然', '公園'],
+  family: ['家', '爸', '媽', '親', '子', '女', '哥', '弟', '妹', '家庭', '家人', '父親', '母親'],
+  food: ['飯', '麵', '菜', '茶', '果', '肉', '蛋', '湯', '糖', '餅', '奶', '包', '食', '飲', '牛奶', '水果', '餐廳', '午膳'],
+  action: ['跑', '跳', '玩', '笑', '行', '走', '拍', '飛', '游', '追', '動', '活動', '運動', '奔跑', '步'],
+};
+const CHAR_EMOJI_OVERRIDES = {
+  書: '📚✏️', 學: '🏫📘', 校: '🏫🎒', 山: '⛰️🌿', 河: '🌊🐟', 樹: '🌳🍃',
+  家: '🏠💞', 爸: '👨💙', 媽: '👩💗', 飯: '🍚🥢', 麵: '🍜😋', 菜: '🥬🥕',
+  跑: '🏃💨', 跳: '🤸⭐', 吃: '😋🍽️', 食: '🍽️😋', 飲: '🥤💧', 雨: '🌧️☔',
+  海: '🌊🐚', 花: '🌸🌼', 草: '🌱☘️', 友: '🤝😊', 車: '🚌🚗', 電: '📱⚡'
+};
+const ENCOURAGEMENT = {
+  success: ['太棒了！真厲害！', '太棒了！', '真厲害！', '你很專心！'],
+  retry: ['再試一次！你可以的！', '差一點點，再來！', '不要緊，慢慢想！'],
+  complete: ['學習小達人！', '恭喜完成任務！', '今天的表現閃閃發亮！']
+};
+const ACHIEVEMENTS = [
+  { id: 'first-step', icon: '🌟', name: '第一步', desc: '第一次答對題目', test: () => state.today.correct >= 1 || state.totalScore > 0 },
+  { id: 'streak3', icon: '🔥', name: '三連擊', desc: '連續答對 3 題', test: () => state.streak >= 3 },
+  { id: 'streak5', icon: '⚡', name: '五連擊', desc: '連續答對 5 題', test: () => state.streak >= 5 },
+  { id: 'learn20', icon: '🌱', name: '發芽樹苗', desc: '累積已學 20 個字', test: () => state.learnedSet.size >= 20 },
+  { id: 'learn80', icon: '🌳', name: '茂盛大樹', desc: '累積已學 80 個字', test: () => state.learnedSet.size >= 80 },
+  { id: 'review-star', icon: '🧠', name: '複習小達人', desc: '熟悉度達 5 星的字至少 5 個', test: () => getMasteredCharCount() >= 5 },
+];
 
 let state = {
   mode: 'mc',
@@ -1780,7 +2302,8 @@ let state = {
   },
   learnedSet: new Set(),
   mc: {
-    questionMode: 'meaning',
+    questionMode: 'mixed',
+    currentQuestionType: 'meaning',
     currentChar: null,
     options: [],
     answered: false,
@@ -1799,6 +2322,19 @@ let state = {
     wrong: 0,
     done: false,
     bonusAwarded: false,
+  },
+  review: {
+    // 智能複習資料：
+    // pool 存需要優先重溫的字；charStats 記錄熟悉度與遺忘曲線節奏；
+    // dailyHistory 則支援上方的學習歷程圖表。
+    pool: [],
+    charStats: {},
+    dailyHistory: {},
+  },
+  settings: {
+    // 音效設定會保存在本機，下一次打開遊戲也會沿用相同偏好。
+    muted: false,
+    volume: 0.6,
   },
   news: {
     items: [],
@@ -1827,6 +2363,10 @@ const STORAGE_KEYS = {
   legacyHistoricalTotalScore: 'hkTraditionalGame.historicalTotalScore',
   todayStats: 'hkTraditionalGame.todayStats',
   learnedChars: 'hkTraditionalGame.learnedChars',
+  reviewPool: 'hkTraditionalGame.reviewPool',
+  reviewStats: 'hkTraditionalGame.reviewStats',
+  dailyHistory: 'hkTraditionalGame.dailyHistory',
+  audioSettings: 'hkTraditionalGame.audioSettings',
   newsCustomSources: 'hkTraditionalGame.newsCustomSources',
   newsFavorites: 'hkTraditionalGame.newsFavorites',
   newsReviewList: 'hkTraditionalGame.newsReviewList',
@@ -1901,6 +2441,542 @@ function readStoredNumber(...keys) {
   }
   return null;
 }
+function shiftDate(baseDate, offsetDays) {
+  const date = new Date(baseDate);
+  date.setDate(date.getDate() + offsetDays);
+  return date;
+}
+function formatDateKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+function formatShortDateLabel(dateKey) {
+  const date = new Date(`${dateKey}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return dateKey.slice(5);
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+function getCharInfo(charOrInfo) {
+  if (!charOrInfo) return null;
+  return typeof charOrInfo === 'string' ? CHAR_MAP.get(charOrInfo) || null : charOrInfo;
+}
+function getCategoryId(charOrInfo) {
+  const charInfo = getCharInfo(charOrInfo);
+  if (!charInfo) return 'general';
+  if (CATEGORY_CHAR_OVERRIDES[charInfo.c]) return CATEGORY_CHAR_OVERRIDES[charInfo.c];
+  const fullText = `${charInfo.c}${charInfo.m}${charInfo.ex}`.toLowerCase();
+  for (const [categoryId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (keywords.some(keyword => fullText.includes(keyword.toLowerCase()))) return categoryId;
+  }
+  return 'general';
+}
+function getThemeMeta(charOrInfo) {
+  return CATEGORY_THEMES[getCategoryId(charOrInfo)] || CATEGORY_THEMES.general;
+}
+function getThemeStyle(charOrInfo) {
+  const { colors } = getThemeMeta(charOrInfo);
+  return `--theme-start:${colors.start};--theme-end:${colors.end};--theme-soft:${colors.soft};--theme-border:${colors.border};--theme-text:${colors.text};`;
+}
+function renderCategoryLegend() {
+  // 顏色圖例把「主題 → 顏色 → 代表字」放在一起，幫助孩子快速建立聯想。
+  return `<div class="category-legend" aria-label="主題顏色提示">
+    ${['learning', 'nature', 'family', 'food', 'action'].map(categoryId => {
+      const theme = CATEGORY_THEMES[categoryId];
+      return `<span class="category-legend-item" style="--theme-start:${theme.colors.start};--theme-end:${theme.colors.end};--theme-soft:${theme.colors.soft};--theme-border:${theme.colors.border};--theme-text:${theme.colors.text};">
+        ${theme.icon} ${theme.label}
+        <span class="category-legend-sample">${CATEGORY_SAMPLE_TEXT[categoryId]}</span>
+      </span>`;
+    }).join('')}
+  </div>`;
+}
+function getEmojiHint(charOrInfo) {
+  const charInfo = getCharInfo(charOrInfo);
+  if (!charInfo) return '✨';
+  if (CHAR_EMOJI_OVERRIDES[charInfo.c]) return CHAR_EMOJI_OVERRIDES[charInfo.c];
+  const text = `${charInfo.c}${charInfo.m}${charInfo.ex}`;
+  if (/[河海水浪漁]/.test(text)) return '🌊🐟';
+  if (/[山峰石岩]/.test(text)) return '⛰️🌿';
+  if (/[樹木林草花葉]/.test(text)) return '🌳🍃';
+  if (/[家爸媽親妹弟哥]/.test(text)) return '🏠💞';
+  if (/[飯麵菜果茶蛋奶糖餅包]/.test(text)) return '🍽️😋';
+  if (/[跑跳行走飛游動拍]/.test(text)) return '🏃💨';
+  if (/[學書校筆課題讀寫]/.test(text)) return '📘✏️';
+  return getThemeMeta(charInfo).emojis;
+}
+function renderStarMeter(value, max = 5) {
+  const normalized = clamp(Math.round(Number(value) || 0), 0, max);
+  return `${'★'.repeat(normalized)}${'☆'.repeat(max - normalized)}`;
+}
+function ensureReviewRecord(charOrInfo) {
+  const charInfo = getCharInfo(charOrInfo);
+  if (!charInfo) return null;
+  if (!state.review.charStats[charInfo.c]) {
+    state.review.charStats[charInfo.c] = {
+      familiarity: 0,
+      seenCount: 0,
+      correctCount: 0,
+      wrongCount: 0,
+      lastSeenAt: '',
+      nextReviewAt: '',
+      flagged: false,
+      lastSource: '',
+      lastOutcome: '',
+    };
+  }
+  return state.review.charStats[charInfo.c];
+}
+function getFamiliarity(charOrInfo) {
+  const charInfo = getCharInfo(charOrInfo);
+  if (!charInfo) return 0;
+  return clamp(state.review.charStats[charInfo.c]?.familiarity || 0, 0, 5);
+}
+function getMasteredCharCount() {
+  return Object.values(state.review.charStats).filter(record => (record?.familiarity || 0) >= 5).length;
+}
+function formatReviewCountdown(dateString) {
+  if (!dateString) return '待安排';
+  const diff = new Date(dateString).getTime() - Date.now();
+  if (!Number.isFinite(diff)) return '待安排';
+  if (diff <= 0) return '現在可複習';
+  const minutes = Math.round(diff / 60000);
+  if (minutes < 60) return `${minutes} 分鐘後`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 48) return `${hours} 小時後`;
+  return `${Math.round(hours / 24)} 天後`;
+}
+function isReviewChar(char) {
+  return state.review.pool.includes(char) || state.news.reviewList.includes(char);
+}
+function isDueReviewChar(charOrInfo) {
+  const charInfo = getCharInfo(charOrInfo);
+  if (!charInfo) return false;
+  const record = state.review.charStats[charInfo.c];
+  if (!record?.nextReviewAt) return false;
+  return new Date(record.nextReviewAt).getTime() <= Date.now();
+}
+function syncReviewList(char, shouldAdd) {
+  if (!CHAR_MAP.has(char)) return;
+  state.review.pool = shouldAdd
+    ? [char, ...state.review.pool.filter(entry => entry !== char)]
+    : state.review.pool.filter(entry => entry !== char);
+  state.news.reviewList = shouldAdd
+    ? [char, ...state.news.reviewList.filter(entry => entry !== char)]
+    : state.news.reviewList.filter(entry => entry !== char);
+}
+function markCharForReview(char, reason = 'manual') {
+  if (!CHAR_MAP.has(char)) return;
+  const record = ensureReviewRecord(char);
+  syncReviewList(char, true);
+  record.flagged = true;
+  if (!record.nextReviewAt || reason === 'mistake') {
+    record.nextReviewAt = new Date(Date.now() + 8 * 60 * 1000).toISOString();
+  }
+}
+function unmarkCharForReview(char) {
+  syncReviewList(char, false);
+  const record = state.review.charStats[char];
+  if (record) record.flagged = false;
+}
+function updateCharProgress(charOrInfo, isCorrect, source = 'game') {
+  const charInfo = getCharInfo(charOrInfo);
+  if (!charInfo) return;
+  const record = ensureReviewRecord(charInfo);
+  record.seenCount++;
+  record.lastSeenAt = new Date().toISOString();
+  record.lastSource = source;
+  record.lastOutcome = isCorrect ? 'correct' : 'wrong';
+  if (isCorrect) {
+    // 答對時把複習間隔逐步拉長，模擬艾賓浩斯遺忘曲線安排。
+    record.correctCount++;
+    record.familiarity = clamp(record.familiarity > 0 ? record.familiarity + 1 : 1, 1, 5);
+    record.nextReviewAt = new Date(Date.now() + REVIEW_INTERVALS_MS[Math.max(0, record.familiarity - 1)]).toISOString();
+  } else {
+    // 答錯時立刻降低熟悉度，並把這個字送進優先複習池。
+    record.wrongCount++;
+    record.familiarity = clamp(record.familiarity ? record.familiarity - 1 : 1, 1, 5);
+    record.nextReviewAt = new Date(Date.now() + 8 * 60 * 1000).toISOString();
+    markCharForReview(charInfo.c, 'mistake');
+  }
+  savePersistentProgress();
+}
+function getTrackedReviewChars() {
+  return [...new Set([
+    ...Object.keys(state.review.charStats),
+    ...state.review.pool,
+    ...state.news.reviewList,
+  ])].filter(char => CHAR_MAP.has(char));
+}
+function getDueReviewChars(limit = 8) {
+  return getTrackedReviewChars()
+    .map(char => {
+      const record = state.review.charStats[char];
+      return { char, info: CHAR_MAP.get(char), record };
+    })
+    .filter(entry => {
+      if (!entry.info) return false;
+      if (!entry.record?.nextReviewAt) return isReviewChar(entry.char);
+      return new Date(entry.record.nextReviewAt).getTime() <= Date.now();
+    })
+    .sort((a, b) => {
+      const timeA = new Date(a.record?.nextReviewAt || 0).getTime();
+      const timeB = new Date(b.record?.nextReviewAt || 0).getTime();
+      if (timeA !== timeB) return timeA - timeB;
+      return (b.record?.wrongCount || 0) - (a.record?.wrongCount || 0);
+    })
+    .slice(0, limit);
+}
+function buildReviewDeckCandidates() {
+  const dueChars = getDueReviewChars(40).map(entry => entry.info).filter(Boolean);
+  const dueSet = new Set(dueChars.map(char => char.c));
+  const others = shuffle(CHARS.filter(char => !dueSet.has(char.c)));
+  return [...others, ...shuffle(dueChars)];
+}
+function updateDailyHistorySnapshot() {
+  if (!state.today.date) return;
+  state.review.dailyHistory[state.today.date] = {
+    score: state.today.score,
+    answers: state.today.answers,
+    correct: state.today.correct,
+    learned: state.learnedSet.size,
+  };
+  const entries = Object.entries(state.review.dailyHistory).sort(([a], [b]) => a.localeCompare(b)).slice(-30);
+  state.review.dailyHistory = Object.fromEntries(entries);
+}
+function getRecentDailyHistory(days = 7) {
+  const base = new Date();
+  return Array.from({ length: days }, (_, index) => {
+    const date = shiftDate(base, index - (days - 1));
+    const key = formatDateKey(date);
+    const entry = state.review.dailyHistory[key] || { score: 0, answers: 0, correct: 0, learned: state.learnedSet.size };
+    return { key, label: formatShortDateLabel(key), ...entry };
+  });
+}
+function getTreeStageInfo() {
+  const learned = state.learnedSet.size;
+  if (learned < 10) return { title: '學習樹剛發芽', emoji: '🌱' };
+  if (learned < 40) return { title: '小樹苗長高了', emoji: '🌿' };
+  if (learned < 100) return { title: '知識樹開花中', emoji: '🌸' };
+  return { title: '知識大樹好茂盛', emoji: '🌳' };
+}
+function getAchievementList() {
+  return ACHIEVEMENTS.map(item => ({
+    ...item,
+    unlocked: Boolean(item.test()),
+  }));
+}
+function getEncouragement(type) {
+  const pool = ENCOURAGEMENT[type] || ENCOURAGEMENT.success;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+function renderLearningDashboard() {
+  // 全局學習儀表板會持續同步：
+  // 進度曲線、成長樹、待複習字與成就徽章都在這裡集中呈現。
+  const historyChart = document.getElementById('historyChart');
+  const historyChartNote = document.getElementById('historyChartNote');
+  const growthTree = document.getElementById('growthTree');
+  const growthTreeNote = document.getElementById('growthTreeNote');
+  const reviewStatsPanel = document.getElementById('reviewStatsPanel');
+  const achievementPanel = document.getElementById('achievementPanel');
+  const reviewDueSummary = document.getElementById('reviewDueSummary');
+  const treeStageSummary = document.getElementById('treeStageSummary');
+  if (!historyChart || !growthTree || !reviewStatsPanel || !achievementPanel || !reviewDueSummary || !treeStageSummary) return;
+
+  const history = getRecentDailyHistory();
+  const maxScore = Math.max(20, ...history.map(entry => entry.score || 0));
+  historyChart.innerHTML = history.map(entry => `
+    <div class="history-bar-wrap">
+      <div class="history-bar">
+        <div class="history-bar-fill" style="height:${Math.max(8, Math.round((entry.score || 0) / maxScore * 100))}%"></div>
+      </div>
+      <div class="history-day">${entry.label}</div>
+      <div class="history-value">${entry.score || 0}</div>
+    </div>`).join('');
+  const bestHistoryDay = [...history].sort((a, b) => (b.score || 0) - (a.score || 0))[0];
+  historyChartNote.textContent = bestHistoryDay?.score
+    ? `最佳單日是 ${bestHistoryDay.label}，拿到 ${bestHistoryDay.score} 分。`
+    : '最近 7 天的練習表現會顯示在這裡。';
+
+  const treeStage = getTreeStageInfo();
+  const progressPercent = Math.round(state.learnedSet.size / CHARS.length * 100);
+  growthTree.innerHTML = `
+    <div class="tree-canopy"><div class="tree-leaf-count">${treeStage.emoji} ${state.learnedSet.size}</div></div>
+    <div class="tree-trunk"></div>
+    <div class="tree-base"></div>
+    <div class="tree-stage">${treeStage.title}</div>
+    <div class="tree-progress">已學 ${state.learnedSet.size}/${CHARS.length} 個字 · ${progressPercent}%</div>`;
+  growthTreeNote.textContent = `每學會更多字，樹冠就會更茂盛。現在已收集 ${state.learnedSet.size} 個字。`;
+  treeStageSummary.textContent = treeStage.title;
+
+  const dueReview = getDueReviewChars(5);
+  const trackedCount = Object.keys(state.review.charStats).length;
+  reviewDueSummary.textContent = `需要複習 ${getDueReviewChars(99).length} 個字`;
+  reviewStatsPanel.innerHTML = `
+    <div class="review-stat-card">艾賓浩斯節奏：答對後依 20 分鐘 → 1 天 → 3 天 → 7 天 → 14 天安排複習。</div>
+    <div class="review-stat-card">已追蹤 ${trackedCount} 個字 · 5 星熟悉度 ${getMasteredCharCount()} 個。</div>
+    <div class="review-stat-card">
+      ${dueReview.length
+        ? `<div>優先複習：</div><div class="review-preview">${dueReview.map(entry => `
+            <span class="review-preview-chip" style="${getThemeStyle(entry.info)}">
+              <span class="char">${entry.char}</span>
+              <span>${renderStarMeter(getFamiliarity(entry.char))}</span>
+            </span>`).join('')}</div>`
+        : '目前沒有到期複習字，保持得很好！'}
+    </div>`;
+
+  achievementPanel.innerHTML = getAchievementList().map(item => `
+    <div class="achievement-badge ${item.unlocked ? 'unlocked' : ''}">
+      <span class="icon">${item.icon}</span>
+      <span class="name">${item.name}</span>
+      <span class="desc">${item.desc}</span>
+    </div>`).join('');
+}
+
+// ============================================================
+// AUDIO / CELEBRATION HELPERS
+// ============================================================
+const soundEngine = {
+  context: null,
+  supported: typeof window !== 'undefined' && Boolean(window.AudioContext || window.webkitAudioContext),
+};
+const speechEngine = {
+  supported: typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window,
+  voices: [],
+  activeChar: '',
+};
+async function ensureAudioContext() {
+  // 漸進增強：支援 Web Audio API 才啟用音效，不支援時保持安靜但不影響學習流程。
+  if (!soundEngine.supported) return null;
+  if (!soundEngine.context) {
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+    soundEngine.context = new AudioCtor();
+  }
+  if (soundEngine.context.state === 'suspended') {
+    try {
+      await soundEngine.context.resume();
+    } catch (err) {
+      console.warn('Unable to resume audio context.', err);
+    }
+  }
+  return soundEngine.context;
+}
+function playToneSequence(sequence, waveform = 'sine') {
+  if (state.settings.muted || state.settings.volume <= 0) return;
+  ensureAudioContext().then(ctx => {
+    if (!ctx) return;
+    const baseTime = ctx.currentTime;
+    sequence.forEach((note, index) => {
+      const start = baseTime + (note.delay ?? index * 0.08);
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      oscillator.type = note.type || waveform;
+      oscillator.frequency.value = note.freq;
+      if (note.detune) oscillator.detune.value = note.detune;
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      const peak = (note.gain ?? 0.12) * state.settings.volume;
+      gainNode.gain.setValueAtTime(0.0001, start);
+      gainNode.gain.exponentialRampToValueAtTime(Math.max(0.0001, peak), start + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, start + (note.duration ?? 0.18));
+      oscillator.start(start);
+      oscillator.stop(start + (note.duration ?? 0.18) + 0.04);
+    });
+  }).catch(() => {});
+}
+function playButtonClickSound() {
+  playToneSequence([{ freq: 420, duration: 0.05, gain: 0.04, type: 'square' }, { freq: 280, delay: 0.03, duration: 0.07, gain: 0.03, type: 'square' }], 'square');
+}
+function playCorrectSound() {
+  // 答對時用清脆叮鈴聲，讓孩子馬上得到正向回饋。
+  playToneSequence([
+    { freq: 1318, duration: 0.09, gain: 0.06, type: 'sine' },
+    { freq: 1760, delay: 0.06, duration: 0.17, gain: 0.075, type: 'triangle' },
+    { freq: 2093, delay: 0.14, duration: 0.2, gain: 0.05, type: 'sine' },
+  ], 'triangle');
+}
+function playWrongSound() {
+  // 答錯時改用溫和下降提示音，避免過度刺激。
+  playToneSequence([
+    { freq: 392, duration: 0.18, gain: 0.045, type: 'sine' },
+    { freq: 330, delay: 0.1, duration: 0.24, gain: 0.038, type: 'sine' },
+    { freq: 294, delay: 0.2, duration: 0.28, gain: 0.03, type: 'triangle' },
+  ], 'sine');
+}
+function playStreakSound() {
+  playToneSequence([{ freq: 520, duration: 0.1, gain: 0.05, type: 'triangle' }, { freq: 660, delay: 0.06, duration: 0.12, gain: 0.06, type: 'triangle' }, { freq: 880, delay: 0.13, duration: 0.16, gain: 0.07, type: 'triangle' }], 'triangle');
+}
+function playMatchSuccessSound() {
+  // 配對成功時播放更有「找到一對」感覺的小慶祝旋律。
+  playToneSequence([
+    { freq: 659, duration: 0.1, gain: 0.055, type: 'triangle' },
+    { freq: 784, delay: 0.07, duration: 0.12, gain: 0.06, type: 'triangle' },
+    { freq: 988, delay: 0.14, duration: 0.16, gain: 0.07, type: 'triangle' },
+    { freq: 1318, delay: 0.22, duration: 0.22, gain: 0.08, type: 'triangle' },
+  ], 'triangle');
+}
+function playCelebrateSound() {
+  // 全部完成後用較長的歡快旋律，搭配彩帶與煙花一起慶祝。
+  playToneSequence([
+    { freq: 523, duration: 0.14, gain: 0.055, type: 'triangle' },
+    { freq: 659, delay: 0.08, duration: 0.14, gain: 0.06, type: 'triangle' },
+    { freq: 784, delay: 0.16, duration: 0.16, gain: 0.068, type: 'triangle' },
+    { freq: 988, delay: 0.24, duration: 0.18, gain: 0.074, type: 'triangle' },
+    { freq: 1046, delay: 0.34, duration: 0.18, gain: 0.08, type: 'triangle' },
+    { freq: 1318, delay: 0.44, duration: 0.22, gain: 0.09, type: 'triangle' },
+    { freq: 1568, delay: 0.56, duration: 0.28, gain: 0.095, type: 'triangle' },
+  ], 'triangle');
+}
+function refreshSpeechVoices() {
+  if (!speechEngine.supported) return [];
+  try {
+    speechEngine.voices = window.speechSynthesis.getVoices() || [];
+  } catch (err) {
+    console.warn('Unable to load speech synthesis voices.', err);
+    speechEngine.voices = [];
+  }
+  return speechEngine.voices;
+}
+function pickSpeechVoice() {
+  const voices = speechEngine.voices.length ? speechEngine.voices : refreshSpeechVoices();
+  if (!voices.length) return null;
+  const ranked = voices
+    .map(voice => {
+      const voiceLabel = `${voice.name || ''} ${voice.lang || ''}`.toLowerCase();
+      let score = 0;
+      if ((voice.lang || '').toLowerCase() === 'zh-hk') score += 12;
+      if (/zh[-_]?hk|yue|cantonese|hong kong/.test(voiceLabel)) score += 10;
+      if ((voice.lang || '').toLowerCase().startsWith('zh')) score += 4;
+      if (/premium|natural|enhanced/.test(voiceLabel)) score += 1;
+      return { voice, score };
+    })
+    .sort((a, b) => b.score - a.score);
+  return ranked[0]?.score > 0
+    ? ranked[0].voice
+    : voices.find(voice => (voice.lang || '').toLowerCase().startsWith('zh')) || voices[0];
+}
+function getSpeechStatusText() {
+  if (!speechEngine.supported) return '裝置未支援發音';
+  const voice = pickSpeechVoice();
+  if (!voice) return '發音功能已開啟';
+  const label = `${voice.name || ''} ${voice.lang || ''}`.toLowerCase();
+  return /zh[-_]?hk|yue|cantonese|hong kong/.test(label)
+    ? '粵語發音已就緒'
+    : `發音已就緒（${voice.lang || '系統語音'}）`;
+}
+function setSpeakingTargets(char = '') {
+  speechEngine.activeChar = char;
+  document.querySelectorAll('[data-speak-char]').forEach(node => {
+    node.classList.toggle('speaking', Boolean(char) && node.dataset.speakChar === char);
+  });
+}
+function stopPronunciation() {
+  if (!speechEngine.supported) return;
+  window.speechSynthesis.cancel();
+  setSpeakingTargets('');
+}
+function speakCharacter(charOrInfo, options = {}) {
+  // 以 Web Speech API 播放單字粵語發音；若沒有 zh-HK 語音，會優先退回中文語音。
+  const { showMutedNotice = true, showUnsupportedNotice = true } = options;
+  const charInfo = getCharInfo(charOrInfo);
+  if (!charInfo) return false;
+  if (!speechEngine.supported) {
+    if (showUnsupportedNotice) showFeedback('🔈', '裝置未支援發音功能。');
+    return false;
+  }
+  if (state.settings.muted) {
+    if (showMutedNotice) showFeedback('🔇', '目前已靜音，先開啟音效再聽發音。');
+    return false;
+  }
+  refreshSpeechVoices();
+  const utterance = new SpeechSynthesisUtterance(charInfo.c);
+  const voice = pickSpeechVoice();
+  utterance.lang = voice?.lang || 'zh-HK';
+  if (voice) utterance.voice = voice;
+  utterance.rate = 0.82;
+  utterance.pitch = 1.02;
+  utterance.volume = clamp(state.settings.volume || 0.6, 0.25, 1);
+  utterance.onstart = () => setSpeakingTargets(charInfo.c);
+  utterance.onend = () => setSpeakingTargets('');
+  utterance.onerror = () => setSpeakingTargets('');
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+  return true;
+}
+function speakCharacterFromButton(char, event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  speakCharacter(char);
+}
+function speakModalChar() {
+  const modalOverlay = document.getElementById('modalOverlay');
+  const char = modalOverlay?.dataset.char || '';
+  if (char) speakCharacter(char);
+}
+function setVolume(value) {
+  if (!soundEngine.supported) return;
+  state.settings.volume = clamp(Number(value) / 100, 0, 1);
+  writeStoredJSON(STORAGE_KEYS.audioSettings, state.settings);
+  updateAudioControls();
+}
+function toggleMute() {
+  if (!soundEngine.supported && !speechEngine.supported) return;
+  state.settings.muted = !state.settings.muted;
+  if (state.settings.muted) stopPronunciation();
+  writeStoredJSON(STORAGE_KEYS.audioSettings, state.settings);
+  updateAudioControls();
+}
+function updateAudioControls() {
+  const muteToggle = document.getElementById('muteToggle');
+  const volumeSlider = document.getElementById('volumeSlider');
+  const supportsAnyAudio = soundEngine.supported || speechEngine.supported;
+  if (muteToggle) {
+    if (!supportsAnyAudio) {
+      muteToggle.textContent = '🔈 裝置不支援音效／發音';
+      muteToggle.disabled = true;
+    } else {
+      muteToggle.disabled = false;
+      muteToggle.textContent = state.settings.muted ? '🔇 音效已靜音' : '🔊 音效開啟';
+    }
+  }
+  if (volumeSlider) {
+    volumeSlider.value = String(Math.round((state.settings.volume || 0) * 100));
+    volumeSlider.disabled = !soundEngine.supported;
+  }
+  const speechStatus = document.getElementById('speechStatus');
+  if (speechStatus) speechStatus.textContent = getSpeechStatusText();
+  document.querySelectorAll('[data-pronounce-btn]').forEach(button => {
+    button.disabled = !speechEngine.supported;
+    button.title = speechEngine.supported ? '點擊聽粵語發音' : '裝置未支援發音功能';
+  });
+}
+function launchCelebration(mode = 'confetti') {
+  const layer = document.getElementById('celebrationLayer');
+  if (!layer) return;
+  const count = mode === 'firework' ? 18 : 30;
+  for (let index = 0; index < count; index++) {
+    const piece = document.createElement('div');
+    piece.className = mode === 'firework' ? 'firework-piece' : 'confetti-piece';
+    const color = SOUND_COLORS[index % SOUND_COLORS.length];
+    piece.style.background = color;
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.top = mode === 'firework' ? `${18 + Math.random() * 35}%` : '-5%';
+    piece.style.setProperty('--x', `${(Math.random() - 0.5) * (mode === 'firework' ? 220 : 140)}px`);
+    piece.style.setProperty('--y', `${(Math.random() - 0.5) * 180}px`);
+    piece.style.setProperty('--r', `${Math.random() * 720 - 360}deg`);
+    piece.style.animationDelay = `${Math.random() * 0.12}s`;
+    layer.appendChild(piece);
+    setTimeout(() => piece.remove(), mode === 'firework' ? 1200 : 1900);
+  }
+}
+function launchGrandCelebration() {
+  launchCelebration('confetti');
+  setTimeout(() => launchCelebration('firework'), 120);
+}
 function getAllNewsSources() {
   return [...DEFAULT_NEWS_SOURCES, ...state.news.customSources];
 }
@@ -1909,9 +2985,6 @@ function getNewsCategoryLabel(categoryId) {
 }
 function isNewsFavorite(articleId) {
   return state.news.favorites.includes(articleId);
-}
-function isReviewChar(char) {
-  return state.news.reviewList.includes(char);
 }
 function buildNewsId(sourceId, link, fallbackTitle) {
   const seed = link || fallbackTitle || `${sourceId}-${Date.now()}`;
@@ -2009,6 +3082,29 @@ function loadPersistentProgress() {
       state.learnedSet = new Set(savedLearnedChars.filter(char => CHAR_MAP.has(char)));
     }
 
+    const savedReviewPool = readStoredJSON(STORAGE_KEYS.reviewPool, []);
+    if (Array.isArray(savedReviewPool)) {
+      state.review.pool = savedReviewPool.filter(char => CHAR_MAP.has(char));
+    }
+
+    const savedReviewStats = readStoredJSON(STORAGE_KEYS.reviewStats, {});
+    if (savedReviewStats && typeof savedReviewStats === 'object') {
+      state.review.charStats = Object.fromEntries(
+        Object.entries(savedReviewStats).filter(([char]) => CHAR_MAP.has(char))
+      );
+    }
+
+    const savedDailyHistory = readStoredJSON(STORAGE_KEYS.dailyHistory, {});
+    if (savedDailyHistory && typeof savedDailyHistory === 'object') {
+      state.review.dailyHistory = savedDailyHistory;
+    }
+
+    const savedAudioSettings = readStoredJSON(STORAGE_KEYS.audioSettings, null);
+    if (savedAudioSettings && typeof savedAudioSettings === 'object') {
+      state.settings.muted = Boolean(savedAudioSettings.muted);
+      state.settings.volume = clamp(Number(savedAudioSettings.volume) || 0.6, 0, 1);
+    }
+
     const savedCustomSources = readStoredJSON(STORAGE_KEYS.newsCustomSources, []);
     if (Array.isArray(savedCustomSources)) {
       state.news.customSources = savedCustomSources.filter(source => source && source.id && source.feed);
@@ -2023,6 +3119,7 @@ function loadPersistentProgress() {
     if (Array.isArray(savedReviewList)) {
       state.news.reviewList = savedReviewList.filter(char => CHAR_MAP.has(char));
     }
+    state.review.pool = [...new Set([...state.review.pool, ...state.news.reviewList])];
 
     const savedCachedArticles = readStoredJSON(STORAGE_KEYS.newsCachedArticles, {});
     if (savedCachedArticles && typeof savedCachedArticles === 'object') {
@@ -2043,6 +3140,7 @@ function loadPersistentProgress() {
     state.news.lastUpdated = localStorage.getItem(STORAGE_KEYS.newsLastUpdated) || '';
 
     state.bestScore = Math.max(state.bestScore, state.totalScore);
+    updateDailyHistorySnapshot();
     savePersistentProgress();
   } catch (err) {
     console.warn('localStorage unavailable, progress will not persist.', err);
@@ -2053,11 +3151,16 @@ function syncHistoricalBestScore() {
 }
 function savePersistentProgress() {
   try {
+    updateDailyHistorySnapshot();
     localStorage.setItem(STORAGE_KEYS.totalScore, String(state.totalScore));
     localStorage.setItem(STORAGE_KEYS.bestScore, String(state.bestScore));
     localStorage.setItem(STORAGE_KEYS.legacyHistoricalTotalScore, String(state.totalScore));
     localStorage.setItem(STORAGE_KEYS.todayStats, JSON.stringify(state.today));
     localStorage.setItem(STORAGE_KEYS.learnedChars, JSON.stringify([...state.learnedSet]));
+    localStorage.setItem(STORAGE_KEYS.reviewPool, JSON.stringify(state.review.pool));
+    localStorage.setItem(STORAGE_KEYS.reviewStats, JSON.stringify(state.review.charStats));
+    localStorage.setItem(STORAGE_KEYS.dailyHistory, JSON.stringify(state.review.dailyHistory));
+    localStorage.setItem(STORAGE_KEYS.audioSettings, JSON.stringify(state.settings));
   } catch (err) {
     console.warn('Unable to save progress to localStorage.', err);
   }
@@ -2068,8 +3171,8 @@ function finalizeGameScore() {
 }
 function applyScoreChange(delta) {
   ensureTodayStatsCurrent();
-  state.totalScore += delta;
-  state.today.score += delta;
+  state.totalScore = Math.max(0, state.totalScore + delta);
+  state.today.score = Math.max(0, state.today.score + delta);
   syncHistoricalBestScore();
   savePersistentProgress();
 }
@@ -2079,10 +3182,10 @@ function recordTodayAnswer(isCorrect) {
   if (isCorrect) state.today.correct++;
   savePersistentProgress();
 }
-function showFeedback(emoji) {
+function showFeedback(emoji, text = '') {
   const el = document.createElement('div');
   el.className = 'feedback-overlay';
-  el.textContent = emoji;
+  el.innerHTML = `${emoji}${text ? `<span class="feedback-text">${escapeHtml(text)}</span>` : ''}`;
   document.body.appendChild(el);
   setTimeout(()=>el.remove(), 1000);
 }
@@ -2097,6 +3200,8 @@ function updateScoreBar() {
   document.getElementById('learned').textContent = state.learnedSet.size;
   document.getElementById('todayAnswers').textContent = state.today.answers;
   document.getElementById('todayAccuracy').textContent = getAccuracyText();
+  renderLearningDashboard();
+  updateAudioControls();
 }
 function clearMCAutoNext() {
   if (state.mc.autoNextTimer) {
@@ -2534,12 +3639,14 @@ function toggleNewsFavorite(articleId) {
 function toggleReviewChar(char, rerender = true) {
   if (!CHAR_MAP.has(char)) return;
   if (isReviewChar(char)) {
-    state.news.reviewList = state.news.reviewList.filter(entry => entry !== char);
+    unmarkCharForReview(char);
   } else {
-    state.news.reviewList = [char, ...state.news.reviewList.filter(entry => entry !== char)];
+    markCharForReview(char, 'manual');
   }
   persistNewsState();
+  savePersistentProgress();
   updateModalReviewState(char);
+  renderLearningDashboard();
   if (rerender && state.mode === 'news') renderNews();
 }
 function toggleModalReviewChar() {
@@ -2551,8 +3658,10 @@ function addCurrentArticleCharsToReview() {
   const item = getSelectedNewsItem();
   if (!item) return;
   const { newChars } = getArticleVocabulary(item);
-  state.news.reviewList = [...new Set([...newChars, ...state.news.reviewList])];
+  newChars.forEach(char => markCharForReview(char, 'manual'));
   persistNewsState();
+  savePersistentProgress();
+  renderLearningDashboard();
   renderNews();
 }
 function handleNewsContentScroll(element, skipPersist = false) {
@@ -2842,21 +3951,65 @@ function buildMeaningOptions(correct) {
 
   return shuffle([correct, ...wrongs]);
 }
+function buildEmojiOptions(correct) {
+  const wrongs = [];
+  const usedEmoji = new Set([getEmojiHint(correct)]);
+  for (const candidate of shuffle(CHARS)) {
+    const emoji = getEmojiHint(candidate);
+    if (candidate.c === correct.c || usedEmoji.has(emoji)) continue;
+    wrongs.push(candidate);
+    usedEmoji.add(emoji);
+    if (wrongs.length === 3) break;
+  }
+  if (wrongs.length < 3) {
+    for (const candidate of shuffle(CHARS)) {
+      if (candidate.c === correct.c || wrongs.some(entry => entry.c === candidate.c)) continue;
+      wrongs.push(candidate);
+      if (wrongs.length === 3) break;
+    }
+  }
+  return shuffle([correct, ...wrongs]);
+}
+function refreshMCOptions() {
+  const mc = state.mc;
+  if (!mc.currentChar) return;
+  mc.currentQuestionType = mc.questionMode === 'mixed'
+    ? (mc.questionIndex % 2 === 0 ? 'meaning' : 'emoji')
+    : mc.questionMode;
+  mc.options = mc.currentQuestionType === 'emoji'
+    ? buildEmojiOptions(mc.currentChar)
+    : buildMeaningOptions(mc.currentChar);
+}
+function setMCQuestionMode(mode) {
+  state.mc.questionMode = mode;
+  if (state.mc.currentChar && !state.mc.answered) {
+    refreshMCOptions();
+  }
+  if (state.mode === 'mc') renderMC();
+}
+function getMCQuestionText() {
+  return state.mc.currentQuestionType === 'emoji'
+    ? '看看哪一組圖像最能提醒你這個字：'
+    : '選出最合適的字義／用法提示：';
+}
 
 function nextMCQuestion() {
   const mc = state.mc;
   clearMCAutoNext();
   if (!mc.deck.length) {
-    mc.deck = shuffle(CHARS);
+    if (mc.questionIndex > 0) {
+      mc.roundsCompleted++;
+      launchGrandCelebration();
+      playCelebrateSound();
+      showFeedback('🎆', getEncouragement('complete'));
+    }
+    mc.deck = buildReviewDeckCandidates();
     mc.roundIndex = 0;
-    if (mc.questionIndex > 0) mc.roundsCompleted++;
   }
   mc.currentChar = mc.deck.pop();
   mc.roundIndex++;
-
-  const correct = mc.currentChar;
-  mc.options = buildMeaningOptions(correct);
   mc.answered = false;
+  refreshMCOptions();
   if (state.mode === 'mc') renderMC();
 }
 
@@ -2866,32 +4019,54 @@ function renderMC() {
   const char = mc.currentChar;
   if (!char) { startMCGame(); return; }
 
-  const qText = '選出最合適的字義／用法提示：';
+  const theme = getThemeMeta(char);
+  const qText = getMCQuestionText();
   const pct = (mc.roundIndex/CHARS.length*100).toFixed(0);
+  const familiarity = getFamiliarity(char);
+  const isDueReview = isDueReviewChar(char);
+  const reviewRecord = state.review.charStats[char.c];
 
   card.innerHTML = `
     <div class="mode-select">
-      <button class="mode-btn active" type="button">字義解釋</button>
+      <button class="mode-btn ${mc.questionMode === 'meaning' ? 'active' : ''}" type="button" onclick="setMCQuestionMode('meaning')">字義模式</button>
+      <button class="mode-btn ${mc.questionMode === 'emoji' ? 'active' : ''}" type="button" onclick="setMCQuestionMode('emoji')">圖片模式</button>
+      <button class="mode-btn ${mc.questionMode === 'mixed' ? 'active' : ''}" type="button" onclick="setMCQuestionMode('mixed')">混合模式</button>
     </div>
-    <div class="mc-char" onclick="openModal('${char.c}')" title="點擊查看詳情">${char.c}</div>
+    <div class="mc-stage theme-surface ${isDueReview ? 'review-due' : ''}" style="${getThemeStyle(char)}">
+      <div class="mc-theme-row">
+        <span class="theme-chip">${theme.icon} ${theme.label}</span>
+        <span class="theme-chip">🖼️ ${getEmojiHint(char)}</span>
+        <span class="theme-chip">${isDueReview ? '⏰ 今天重溫' : `📆 ${formatReviewCountdown(reviewRecord?.nextReviewAt)}`}</span>
+      </div>
+      <div class="mc-emoji-burst">${getEmojiHint(char)}</div>
+      <div class="mc-char speakable-char" id="mcCharDisplay" data-speak-char="${char.c}" onclick="openModal('${char.c}')" title="點擊聽發音並查看詳情">${char.c}</div>
+      <div class="mc-char-actions">
+        <button class="pronounce-btn inline" type="button" data-pronounce-btn="true" data-speak-char="${char.c}" onclick="speakCharacterFromButton('${char.c}', event)">🗣️ 聽粵語發音</button>
+      </div>
+      <div class="mc-stars">熟悉度 ${renderStarMeter(familiarity)}</div>
+      <div class="mc-support">常用詞語：${escapeHtml(char.ex)}${char.p ? ` · 粵拼：${escapeHtml(char.p)}` : ''}</div>
+    </div>
     <div class="mc-meta">本輪第 ${mc.roundIndex} / ${CHARS.length} 題 · 年級：小${char.g}</div>
     <div class="mc-session">已答 ${mc.questionIndex} 題 · 答對 ${mc.correct} 題 · 答錯 ${mc.wrong} 題 · 已完成 ${mc.roundsCompleted} 輪</div>
     <div class="mc-question">${qText}</div>
     <div class="mc-options" id="mcOptions">
       ${mc.options.map((opt,i)=>`
-        <button class="mc-opt" id="opt${i}" onclick="checkMCAnswer(${i})">
-          ${opt.m}
+        <button class="mc-opt ${mc.currentQuestionType === 'emoji' ? 'picture' : ''}" id="opt${i}" onclick="checkMCAnswer(${i})" style="${getThemeStyle(opt)}">
+          <span class="mc-opt-emoji">${getEmojiHint(opt)}</span>
+          <span class="mc-opt-title">${escapeHtml(mc.currentQuestionType === 'emoji' ? opt.ex : opt.m)}</span>
+          <span class="mc-opt-subtitle">${escapeHtml(mc.currentQuestionType === 'emoji' ? opt.m : `${getThemeMeta(opt).label} · ${opt.ex}`)}</span>
         </button>
       `).join('')}
     </div>
-    <div class="mc-status" id="mcStatus">隨機抽題中，答完會自動跳到下一題；完成 ${CHARS.length} 題後會重新洗牌。</div>
+    <div class="mc-status" id="mcStatus">${isDueReview ? '這一題是智能複習安排，黃色提示會提醒你重溫重點。' : '文字、圖像、顏色會一起幫助你記住這個字。'}</div>
     <div class="mc-controls">
       <div>
         <div class="mc-progress">本輪進度 ${mc.roundIndex}/${CHARS.length}</div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;${getThemeStyle(char)}"></div></div>
       </div>
       <button class="btn-action btn-restart" onclick="startMCGame()">重新開始</button>
     </div>`;
+  updateAudioControls();
 }
 
 function checkMCAnswer(idx) {
@@ -2902,38 +4077,53 @@ function checkMCAnswer(idx) {
 
   const selected = mc.options[idx];
   const correct = mc.currentChar;
-  const isCorrect = selected.m === correct.m;
+  const isCorrect = selected.c === correct.c;
 
   const opts = document.querySelectorAll('.mc-opt');
-  const correctIdx = mc.options.findIndex(o => o.m === correct.m);
+  const correctIdx = mc.options.findIndex(o => o.c === correct.c);
   const status = document.getElementById('mcStatus');
+  const charDisplay = document.getElementById('mcCharDisplay');
   opts.forEach(opt => {
     opt.disabled = true;
-    // 清除 hover 状态：触发 mouseleave 事件
     opt.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
   });
 
   if (isCorrect) {
     opts[idx].classList.add('correct');
+    if (charDisplay) {
+      charDisplay.classList.remove('mistake');
+      void charDisplay.offsetWidth;
+      charDisplay.classList.add('celebrate');
+    }
     mc.correct++;
     recordTodayAnswer(true);
     state.streak++;
     const bonus = state.streak >= 5 ? 20 : state.streak >= 3 ? 15 : 10;
     applyScoreChange(bonus);
     state.learnedSet.add(correct.c);
-    showFeedback(state.streak >= 5 ? '🔥' : '✅');
-    if (status) status.textContent = `答對！+${bonus} 分，正在準備下一題...`;
+    updateCharProgress(correct, true, 'mc');
+    playCorrectSound();
+    if (state.streak >= 3) playStreakSound();
+    showFeedback(state.streak >= 5 ? '🔥' : '✅', getEncouragement('success'));
+    if (status) status.textContent = `${getEncouragement('success')} +${bonus} 分，正在準備下一題...`;
   } else {
     opts[idx].classList.add('wrong');
     opts[correctIdx].classList.add('correct');
+    if (charDisplay) {
+      charDisplay.classList.remove('celebrate');
+      void charDisplay.offsetWidth;
+      charDisplay.classList.add('mistake');
+    }
     mc.wrong++;
     recordTodayAnswer(false);
     const penalty = 5;
     const deducted = Math.min(penalty, state.totalScore);
     applyScoreChange(-deducted);
     state.streak = 0;
-    showFeedback('❌');
-    if (status) status.textContent = `答錯了，扣 ${deducted} 分。正確答案是「${correct.m}」，正在準備下一題...`;
+    updateCharProgress(correct, false, 'mc');
+    playWrongSound();
+    showFeedback('❌', getEncouragement('retry'));
+    if (status) status.textContent = `${getEncouragement('retry')} 正確答案是「${correct.m}」，扣 ${deducted} 分。`;
   }
 
   mc.questionIndex++;
@@ -2941,15 +4131,46 @@ function checkMCAnswer(idx) {
   mc.autoNextTimer = setTimeout(() => {
     mc.autoNextTimer = null;
     nextMCQuestion();
-  }, 900);
+  }, 1100);
 }
 
 // ============================================================
 // MATCHING GAME
 // ============================================================
+function getMatchCharacters() {
+  const dueChars = getDueReviewChars(4).map(entry => entry.info).filter(Boolean);
+  const used = new Set(dueChars.map(char => char.c));
+  const randomChars = pick(CHARS.filter(char => !used.has(char.c)), MATCH_PAIRS - dueChars.length);
+  return shuffle([...dueChars, ...randomChars]).slice(0, MATCH_PAIRS);
+}
+function createMatchConnection(sourceId, targetId, charInfo) {
+  const wrap = document.getElementById('matchBoardWrap');
+  const fromEl = document.getElementById(`tile_${sourceId}`);
+  const toEl = document.getElementById(`tile_${targetId}`);
+  const layer = document.getElementById('matchConnectionLayer');
+  if (!wrap || !fromEl || !toEl || !layer) return;
+  const wrapRect = wrap.getBoundingClientRect();
+  const fromRect = fromEl.getBoundingClientRect();
+  const toRect = toEl.getBoundingClientRect();
+  const fromX = fromRect.left - wrapRect.left + fromRect.width / 2;
+  const fromY = fromRect.top - wrapRect.top + fromRect.height / 2;
+  const toX = toRect.left - wrapRect.left + toRect.width / 2;
+  const toY = toRect.top - wrapRect.top + toRect.height / 2;
+  const distance = Math.hypot(toX - fromX, toY - fromY);
+  const angle = Math.atan2(toY - fromY, toX - fromX);
+  const line = document.createElement('div');
+  line.className = 'match-connection';
+  line.style.left = `${fromX}px`;
+  line.style.top = `${fromY}px`;
+  line.style.width = `${distance}px`;
+  line.style.transform = `rotate(${angle}rad)`;
+  line.style.background = `linear-gradient(90deg, ${getThemeMeta(charInfo).colors.start}, rgba(255,255,255,0.96), ${getThemeMeta(charInfo).colors.end})`;
+  layer.appendChild(line);
+  setTimeout(() => line.remove(), 800);
+}
 function startMatchGame() {
   const mt = state.match;
-  const chars = pick(CHARS, MATCH_PAIRS);
+  const chars = getMatchCharacters();
 
   let tiles = [];
   chars.forEach((ch, i) => {
@@ -2980,15 +4201,22 @@ function renderMatch() {
     if (!mt.bonusAwarded) {
       applyScoreChange(score);
       mt.bonusAwarded = true;
+      playCelebrateSound();
+      launchGrandCelebration();
     }
     finalizeGameScore();
-    mt.tiles.forEach(t => state.learnedSet.add(t.char.c));
+    [...new Set(mt.tiles.map(tile => tile.char.c))].forEach(char => {
+      const charInfo = CHAR_MAP.get(char);
+      if (!charInfo) return;
+      state.learnedSet.add(char);
+      updateCharProgress(charInfo, true, 'match-complete');
+    });
     updateScoreBar();
     card.innerHTML = `
       <div class="result-screen">
-        <div class="result-stars">🎉🎊🎉</div>
+        <div class="result-stars">🎉🎊🎆</div>
         <h2 style="color:#764ba2">配對完成！</h2>
-        <div class="result-score">錯誤：${mt.wrong} 次 · 獲得 +${score} 分</div>
+        <div class="result-score">${getEncouragement('complete')} 錯誤：${mt.wrong} 次 · 獲得 +${score} 分</div>
         <div class="result-btns">
           <button class="btn-action btn-newgame" onclick="startMatchGame()">再玩一次</button>
           <button class="btn-action btn-restart" onclick="showMode('mc')">試選擇題</button>
@@ -3000,21 +4228,28 @@ function renderMatch() {
   card.innerHTML = `
     <div class="match-header">
       <h2>🎯 配對遊戲 — 找出對應的字詞</h2>
-      <div class="match-subtitle">固定 10 對（20 張卡片），配對繁體字與常用詞語。</div>
+      <div class="match-subtitle">固定 10 對（20 張卡片），同色主題與 emoji 提示會一起幫助你配對。</div>
     </div>
-    <div class="match-status" id="matchStatus">點擊繁體字，再點擊對應的常用詞語！</div>
-    <div class="match-board" id="matchBoard">
+    ${renderCategoryLegend()}
+    <div class="match-status" id="matchStatus">先選繁體字，再選對應詞語；黃色外框表示你正在連線。</div>
+    <div class="match-board-wrap" id="matchBoardWrap">
+      <div class="match-connection-layer" id="matchConnectionLayer"></div>
+      <div class="match-board" id="matchBoard">
       ${mt.tiles.map(t => {
         const isMatched = mt.matched.includes(t.pairId);
         const isSelected = mt.selected === t.id;
         const typeClass = t.type === 'char'
           ? ''
           : `meaning${t.content.length >= 4 ? ' meaning-compact' : ''}`;
-        return `<div class="match-tile ${typeClass} ${isMatched?'matched':''} ${isSelected?'selected':''}"
-          id="tile_${t.id}" onclick="selectMatchTile('${t.id}')">
-          <span class="tile-content">${t.content}</span>
+        const speakableClass = t.type === 'char' ? 'speakable-tile' : '';
+        const speakAttr = t.type === 'char' ? `data-speak-char="${t.char.c}"` : '';
+        return `<div class="match-tile ${typeClass} ${speakableClass} ${isMatched?'matched':''} ${isSelected?'selected':''}"
+          id="tile_${t.id}" onclick="selectMatchTile('${t.id}')" style="${getThemeStyle(t.char)}" ${speakAttr}>
+          <span class="tile-emoji">${getEmojiHint(t.char)}</span>
+          <span class="tile-content">${escapeHtml(t.content)}</span>
         </div>`;
       }).join('')}
+      </div>
     </div>
     <div class="match-controls">
       <button class="btn-action btn-restart" onclick="startMatchGame()">重新開始</button>
@@ -3026,6 +4261,7 @@ function selectMatchTile(id) {
   const mt = state.match;
   const tile = mt.tiles.find(t => t.id === id);
   if (!tile || mt.matched.includes(tile.pairId)) return;
+  if (tile.type === 'char') speakCharacter(tile.char, { showMutedNotice: false, showUnsupportedNotice: false });
 
   if (!mt.selected) {
     mt.selected = id;
@@ -3042,7 +4278,6 @@ function selectMatchTile(id) {
   const prev = mt.tiles.find(t => t.id === mt.selected);
 
   if (prev.pairId === tile.pairId && prev.type !== tile.type) {
-    // Match!
     mt.matched.push(tile.pairId);
     mt.selected = null;
     recordTodayAnswer(true);
@@ -3050,31 +4285,41 @@ function selectMatchTile(id) {
     const pts = 15;
     applyScoreChange(pts);
     state.streak++;
+    updateCharProgress(tile.char, true, 'match');
     updateScoreBar();
-    showFeedback('🎉');
+    playMatchSuccessSound();
+    if (state.streak >= 3) playStreakSound();
+    showFeedback('🎉', getEncouragement('success'));
 
-    document.getElementById('tile_'+id).classList.add('matched');
+    document.getElementById('tile_'+id).classList.add('matched', 'match-pop');
     document.getElementById('tile_'+prev.id).classList.remove('selected');
-    document.getElementById('tile_'+prev.id).classList.add('matched');
+    document.getElementById('tile_'+prev.id).classList.add('matched', 'match-pop');
+    createMatchConnection(prev.id, id, tile.char);
+    setTimeout(() => {
+      document.getElementById('tile_'+id)?.classList.remove('match-pop');
+      document.getElementById('tile_'+prev.id)?.classList.remove('match-pop');
+    }, 760);
 
     const status = document.getElementById('matchStatus');
     status.className = 'match-status success';
-    status.textContent = `正確！「${tile.char.c}」= ${tile.char.ex} ✓`;
+    status.textContent = `${getEncouragement('success')} 「${tile.char.c}」= ${tile.char.ex} ✓`;
 
     if (mt.matched.length === MATCH_PAIRS) {
-      setTimeout(()=>{ mt.done = true; renderMatch(); }, 800);
+      setTimeout(()=>{ mt.done = true; renderMatch(); }, 900);
     }
   } else {
-    // Wrong
     mt.wrong++;
     recordTodayAnswer(false);
     state.streak = 0;
+    updateCharProgress(prev.char, false, 'match');
+    if (tile.char.c !== prev.char.c) updateCharProgress(tile.char, false, 'match');
     updateScoreBar();
-    showFeedback('❌');
+    playWrongSound();
+    showFeedback('❌', getEncouragement('retry'));
 
     const status = document.getElementById('matchStatus');
     status.className = 'match-status error';
-    status.textContent = '不對！再試試吧 🤔';
+    status.textContent = getEncouragement('retry');
 
     const prevEl = document.getElementById('tile_'+prev.id);
     const curEl = document.getElementById('tile_'+id);
@@ -3106,6 +4351,7 @@ function renderBrowse() {
         ${[1,2,3,4,5,6].map(g=>`<button class="grade-btn ${browseFilter.grade===g?'active':''}" onclick="setBrowseGrade(${g})">小${g}</button>`).join('')}
       </div>
     </div>
+    ${renderCategoryLegend()}
     <div class="char-grid" id="charGrid"></div>`;
   updateBrowseGrid();
 }
@@ -3128,8 +4374,11 @@ function updateBrowseGrid() {
   const grid = document.getElementById('charGrid');
   if (!grid) return;
   grid.innerHTML = filtered.map(ch=>`
-    <div class="char-tile" onclick="openModal('${ch.c}')">
+    <div class="char-tile speakable-tile ${isDueReviewChar(ch) ? 'review-due' : ''}" data-speak-char="${ch.c}" onclick="openModal('${ch.c}')" style="${getThemeStyle(ch)}">
+      <span class="char-theme-tag">${getThemeMeta(ch).icon} ${getThemeMeta(ch).label}</span>
+      <span class="char-emoji">${getEmojiHint(ch)}</span>
       <span class="ct">${ch.c}</span>
+      <span class="char-stars">${renderStarMeter(getFamiliarity(ch))}</span>
       <span class="cp">${ch.p || ch.ex}</span>
     </div>`).join('');
 }
@@ -3151,33 +4400,49 @@ function updateModalReviewState(char) {
 
   button.style.display = 'inline-block';
   button.textContent = isReviewChar(char) ? '移出複習清單' : '加入複習清單';
+  const record = state.review.charStats[char];
+  const familiarityText = `熟悉度：${renderStarMeter(getFamiliarity(char)) || '☆☆☆☆☆'}`;
+  const reviewText = record?.nextReviewAt
+    ? `下次複習：${formatReviewCountdown(record.nextReviewAt)}`
+    : '下次複習：尚未安排';
+  const speechHint = speechEngine.supported ? ' · 點擊大字或按鈕可重聽粵語發音。' : ' · 裝置未支援發音功能。';
   note.textContent = isReviewChar(char)
-    ? '這個字已在複習清單，可稍後回到新聞任務集中複習。'
+    ? `${familiarityText} · ${reviewText} · 這個字已在複習清單。${speechHint}`
     : state.learnedSet.has(char)
-      ? '這個字你在遊戲中見過了，仍然可以加入複習清單加深印象。'
-      : '這個字已標記為新聞生字，可加入複習清單留待重溫。';
+      ? `${familiarityText} · ${reviewText} · 你已見過這個字，可加入複習清單加深印象。${speechHint}`
+      : `${familiarityText} · ${reviewText} · 這個字可以先收進複習清單。${speechHint}`;
 }
-function openModal(char, context = state.mode) {
+function openModal(char, context = state.mode, speakOnOpen = true) {
   const ch = CHARS.find(c=>c.c===char);
   if (!ch) return;
   const modalOverlay = document.getElementById('modalOverlay');
+  const modalBox = modalOverlay.querySelector('.modal-box');
   modalOverlay.dataset.char = ch.c;
   modalOverlay.dataset.context = context;
-  document.getElementById('modalChar').textContent = ch.c;
+  if (modalBox) modalBox.setAttribute('style', getThemeStyle(ch));
+  document.getElementById('modalEmoji').textContent = getEmojiHint(ch);
+  const modalChar = document.getElementById('modalChar');
+  modalChar.textContent = ch.c;
+  modalChar.dataset.speakChar = ch.c;
+  const modalSpeakBtn = document.getElementById('modalSpeakBtn');
+  if (modalSpeakBtn) modalSpeakBtn.dataset.speakChar = ch.c;
+  document.getElementById('modalStars').textContent = `熟悉度 ${renderStarMeter(getFamiliarity(ch))}`;
   const pinyinEl = document.getElementById('modalPinyin');
   pinyinEl.textContent = ch.p ? '粵拼：' + ch.p : '參考詞語：' + ch.ex;
   pinyinEl.style.display = 'block';
   document.getElementById('modalMeaning').textContent = '字義／用法：' + ch.m;
-  document.getElementById('modalGrade').textContent = '年級：小學' + ch.g + '年級';
-  document.getElementById('modalExample').innerHTML = '<strong>常用詞語：</strong>' + ch.ex;
+  document.getElementById('modalGrade').textContent = `年級：小學${ch.g}年級 · 主題：${getThemeMeta(ch).label}`;
+  document.getElementById('modalExample').innerHTML = `<strong>常用詞語：</strong>${escapeHtml(ch.ex)}<br><strong>圖像提示：</strong>${escapeHtml(getEmojiHint(ch))}<br><strong>發音方式：</strong>點擊大字或按「聽粵語發音」`;
   updateModalReviewState(ch.c);
   modalOverlay.style.display = 'flex';
+  if (speakOnOpen) speakCharacter(ch, { showMutedNotice: false, showUnsupportedNotice: false });
 }
 function closeModal(e) {
   if (!e || e.target === document.getElementById('modalOverlay')) {
     const modalOverlay = document.getElementById('modalOverlay');
     modalOverlay.style.display = 'none';
     delete modalOverlay.dataset.char;
+    stopPronunciation();
   }
 }
 
@@ -3202,10 +4467,35 @@ function createStars() {
 // ============================================================
 // INIT
 // ============================================================
+document.addEventListener('pointerdown', event => {
+  const interactive = event.target.closest('button, .news-chip, .news-mini-btn, .char-tile, .news-item');
+  if (!interactive) return;
+  if (interactive.matches('.mc-opt')) return;
+  playButtonClickSound();
+}, true);
+
+if (speechEngine.supported) {
+  refreshSpeechVoices();
+  if (typeof window.speechSynthesis.addEventListener === 'function') {
+    window.speechSynthesis.addEventListener('voiceschanged', () => {
+      refreshSpeechVoices();
+      updateAudioControls();
+    });
+  } else {
+    window.speechSynthesis.onvoiceschanged = () => {
+      refreshSpeechVoices();
+      updateAudioControls();
+    };
+  }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopPronunciation();
+});
+
 loadPersistentProgress();
 createStars();
+updateAudioControls();
 updateScoreBar();
-showMode('mc');
 startMCGame();
 </script>
 </body>
