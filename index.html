@@ -4076,14 +4076,52 @@ function renderMC() {
   updateAudioControls();
 }
 
-function checkMCAnswer(idx) {
+function checkMCAnswer(idx, skipPronunciation = false) {
+  const mc = state.mc;
+  if (mc.answered) return;
+  
+  const selected = mc.options[idx];
+  const correct = mc.currentChar;
+  
+  // 如果跳过发音（例如已经播放过），直接执行答案判断
+  if (skipPronunciation) {
+    executeMCAnswerLogic(idx, selected, correct);
+  } else {
+    // 先播放该选项对应汉字的粤语发音
+    const charInfo = selected;
+    if (speechEngine.supported && !state.settings.muted && charInfo) {
+      const utterance = new SpeechSynthesisUtterance(charInfo.c);
+      const voice = pickSpeechVoice();
+      utterance.lang = voice?.lang || 'zh-HK';
+      if (voice) utterance.voice = voice;
+      utterance.rate = 0.82;
+      utterance.pitch = 1.02;
+      utterance.volume = clamp(state.settings.volume || 0.6, 0.25, 1);
+      
+      // 使用 onend 事件检测播放结束，播放结束后才执行答案判断
+      utterance.onend = () => {
+        executeMCAnswerLogic(idx, selected, correct);
+      };
+      utterance.onerror = () => {
+        // 如果发音出错，也继续执行答案判断
+        executeMCAnswerLogic(idx, selected, correct);
+      };
+      
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    } else {
+      // 如果不支持发音或已静音，直接执行答案判断
+      executeMCAnswerLogic(idx, selected, correct);
+    }
+  }
+}
+
+function executeMCAnswerLogic(idx, selected, correct) {
   const mc = state.mc;
   if (mc.answered) return;
   clearMCAutoNext();
   mc.answered = true;
 
-  const selected = mc.options[idx];
-  const correct = mc.currentChar;
   const isCorrect = selected.c === correct.c;
 
   const opts = document.querySelectorAll('.mc-opt');
@@ -4094,6 +4132,7 @@ function checkMCAnswer(idx) {
     opt.disabled = true;
     opt.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
   });
+
 
   if (isCorrect) {
     opts[idx].classList.add('correct');
@@ -4140,6 +4179,7 @@ function checkMCAnswer(idx) {
     nextMCQuestion();
   }, 1100);
 }
+
 
 // ============================================================
 // MATCHING GAME
