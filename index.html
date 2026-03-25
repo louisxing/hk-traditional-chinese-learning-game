@@ -4011,6 +4011,13 @@ function nextMCQuestion() {
   mc.answered = false;
   refreshMCOptions();
   if (state.mode === 'mc') renderMC();
+  // 自动播放粤语发音
+  setTimeout(() => {
+    const char = mc.currentChar;
+    if (char && speechEngine.supported && !state.settings.muted) {
+      speakCharacter(char.c, { showMutedNotice: false, showUnsupportedNotice: false });
+    }
+  }, 400);
 }
 
 function renderMC() {
